@@ -19,8 +19,7 @@
   },
   "license": "ISC",
   "author": "Md Shijan Ali",
-  "type": "commonjs",
-  "main": "index.js",
+  "main": "dist/server.js",
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "start": "node dist/src/server.js",
@@ -47,6 +46,7 @@
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",
-    "@types/express": "^5.0.6"
+    "@types/express": "^5.0.6",
+    "prisma": "^7.6.0"
   }
 }
