@@ -38,7 +38,7 @@ app.use("/api/health", (req, res) => {
 app.get("/", (req, res) => {
   res.json({
     success: true,
-    message: "Welcome to SkillBridge API 🎓",
+    message: "Welcome to Buddy Script Server API 🎓",
     version: "1.0.0",
     endpoints: {
       auth: "/api/auth",

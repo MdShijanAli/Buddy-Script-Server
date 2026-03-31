@@ -1,4 +1,9 @@
-import { Router, Response } from "express";
+import {
+  Router,
+  type Request,
+  type Response,
+  type NextFunction,
+} from "express";
 import { auth } from "../lib/auth";
 import { toNodeHandler } from "better-auth/node";
 import {
@@ -8,12 +13,10 @@ import {
 
 const router = Router();
 
-// Apply middleware to validate signup requests
 router.use(betterAuthMiddleware);
 
 // ==================== HANDLE ALL AUTH ROUTES ====================
-// This catches all auth routes and delegates to better-auth
-router.all("*", async (req, res, next) => {
+router.use("/", async (req: Request, res: Response, next: NextFunction) => {
   try {
     await toNodeHandler(auth)(req, res);
   } catch (error: any) {
