@@ -1,5 +1,9 @@
 enum Roles {
-  STUDENT
-  TUTOR
-  ADMIN
+    USER
+    ADMIN
+}
+
+enum PostVisibility {
+    PUBLIC
+    PRIVATE
 }

@@ -7,7 +7,7 @@ model User {
     createdAt     DateTime @map("created_at")
     updatedAt     DateTime @map("updated_at")
 
-    role          Roles   @default(STUDENT)
+    role          String  @default("USER")
     first_name    String?
     last_name     String?
     phone         String?
@@ -17,6 +17,11 @@ model User {
     is_featured   Boolean @default(false)
     bio           String?
     location      String?
+
+    posts    Post[]    @relation("PostAuthor")
+    likes    Like[]
+    comments Comment[] @relation("CommentAuthor")
+    replies  Reply[]   @relation("ReplyAuthor")
 
     sessions Session[]
     accounts Account[]
