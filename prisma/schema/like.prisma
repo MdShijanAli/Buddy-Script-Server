@@ -10,7 +10,9 @@ model Like {
     reply     Reply?   @relation(fields: [replyId], references: [id], onDelete: Cascade)
     createdAt DateTime @default(now())
 
-    @@unique([userId, postId, commentId, replyId])
+    @@unique([userId, postId], map: "unique_user_post_like")
+    @@unique([userId, commentId], map: "unique_user_comment_like")
+    @@unique([userId, replyId], map: "unique_user_reply_like")
     @@index([userId])
     @@index([postId])
     @@index([commentId])

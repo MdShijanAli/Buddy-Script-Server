@@ -8,6 +8,7 @@ import { authRoutes } from "./modules/auth/auth.route";
 import { tokenRoutes } from "./modules/token/token.route";
 import { userRoutes } from "./modules/user/user.route";
 import { postRoutes } from "./modules/post/post.route";
+import { likeRoutes } from "./modules/like/like.route";
 
 dotenv.config();
 
@@ -31,6 +32,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/token", tokenRoutes);
 // app.use("/api/users", userRoutes);
 app.use("/api/posts", postRoutes);
+app.use("/api/likes", likeRoutes);
 
 app.use("/api/health", (req, res) => {
   res.status(200).json({
