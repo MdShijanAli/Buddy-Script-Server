@@ -1,10 +1,18 @@
 import jwt from "jsonwebtoken";
 import { prisma } from "./prisma";
 
-const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET || "access-secret-key";
-const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET || "refresh-secret-key";
-const ACCESS_TOKEN_EXPIRY = "15m";
-const REFRESH_TOKEN_EXPIRY = "7d";
+const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET as string;
+const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET as string;
+const ACCESS_TOKEN_EXPIRY = process.env.ACCESS_TOKEN_EXPIRY || "6h";
+const REFRESH_TOKEN_EXPIRY = process.env.REFRESH_TOKEN_EXPIRY || "7d";
+
+// Validate secrets exist
+if (!ACCESS_TOKEN_SECRET) {
+  throw new Error("ACCESS_TOKEN_SECRET environment variable is required");
+}
+if (!REFRESH_TOKEN_SECRET) {
+  throw new Error("REFRESH_TOKEN_SECRET environment variable is required");
+}
 
 export interface TokenPayload {
   userId: string;
@@ -66,7 +74,7 @@ export function verifyRefreshToken(token: string): TokenPayload | null {
  * Refresh access token using refresh token
  */
 export async function refreshAccessToken(
-  refreshToken: string
+  refreshToken: string,
 ): Promise<{ accessToken: string; refreshToken: string } | null> {
   const payload = verifyRefreshToken(refreshToken);
 

@@ -1,20 +1,18 @@
 model User {
     id            String   @id
     name          String
-    email         String   @unique
-    emailVerified Boolean  @map("email_verified")
+    email         String
+    emailVerified Boolean  @default(true)
     image         String?
-    createdAt     DateTime @map("created_at")
-    updatedAt     DateTime @map("updated_at")
-
-    role          String  @default("USER")
+    createdAt     DateTime @default(now())
+    updatedAt     DateTime @updatedAt
+    role          String?  @default("USER")
     first_name    String?
     last_name     String?
     phone         String?
     profile_image String?
-    is_active     Boolean @default(true)
-    is_banned     Boolean @default(false)
-    is_featured   Boolean @default(false)
+    is_active     Boolean? @default(true)
+    is_banned     Boolean? @default(false)
     bio           String?
     location      String?
 
@@ -26,6 +24,7 @@ model User {
     sessions Session[]
     accounts Account[]
 
+    @@unique([email])
     @@map("user")
 }
 

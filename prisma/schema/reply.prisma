@@ -1,0 +1,17 @@
+model Reply {
+    id         String   @id @default(cuid())
+    commentId  String
+    comment    Comment  @relation(fields: [commentId], references: [id], onDelete: Cascade)
+    authorId   String
+    author     User     @relation("ReplyAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+    content    String
+    likesCount Int      @default(0)
+    createdAt  DateTime @default(now())
+    updatedAt  DateTime @updatedAt
+
+    likes Like[]
+
+    @@index([commentId])
+    @@index([authorId])
+    @@map("reply")
+}

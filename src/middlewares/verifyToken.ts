@@ -10,11 +10,7 @@ export interface IAuthUser {
 /**
  * Verify JWT access token middleware
  */
-export function verifyToken(
-  req: Request,
-  res: Response,
-  next: NextFunction
-) {
+export function verifyToken(req: Request, res: Response, next: NextFunction) {
   const token =
     req.headers.authorization?.split(" ")[1] ||
     (req.cookies?.accessToken as string) ||
@@ -48,7 +44,7 @@ export function verifyToken(
 export function optionalVerifyToken(
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) {
   const token =
     req.headers.authorization?.split(" ")[1] ||
