@@ -45,6 +45,14 @@ const createLike = async (req: Request, res: Response) => {
 const unLike = async (req: Request, res: Response) => {
   try {
     const likeId = req.params.likeId;
+    const userId = (req as any).user?.userId;
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: "Authentication required",
+        code: "AUTH_REQUIRED",
+      });
+    }
     if (!likeId) {
       return res.status(400).json({
         success: false,
@@ -72,7 +80,46 @@ const unLike = async (req: Request, res: Response) => {
   }
 };
 
+const getLikesByPostId = async (req: Request, res: Response) => {
+  try {
+    const postId = req.params.postId;
+    const userId = (req as any).user?.userId;
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: "Authentication required",
+        code: "AUTH_REQUIRED",
+      });
+    }
+    if (!postId) {
+      return res.status(400).json({
+        success: false,
+        message: "Post ID is required",
+        code: "POST_ID_REQUIRED",
+      });
+    }
+    const likes = await likeService.getLikesByPostId(postId);
+    res.json({
+      success: true,
+      message: "Likes retrieved successfully",
+      likes,
+    });
+  } catch (error: any) {
+    console.error("Get Likes Error: ", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to retrieve likes",
+      code: "GET_LIKES_ERROR",
+      error: {
+        message:
+          error.message?.split("\n").pop().trim() || error.message || error,
+      },
+    });
+  }
+};
+
 export const likeController = {
   createLike,
   unLike,
+  getLikesByPostId,
 };

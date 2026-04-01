@@ -85,7 +85,27 @@ const unLike = async (likeId: string) => {
   }
 };
 
+const getLikesByPostId = async (postId: string) => {
+  const likes = await prisma.like.findMany({
+    where: { postId },
+    include: {
+      user: {
+        select: {
+          id: true,
+          name: true,
+          first_name: true,
+          last_name: true,
+          profile_image: true,
+        },
+      },
+    },
+  });
+
+  return likes;
+};
+
 export const likeService = {
   createLike,
   unLike,
+  getLikesByPostId,
 };

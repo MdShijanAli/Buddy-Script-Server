@@ -14,5 +14,10 @@ router.delete(
   authMiddleware(UserRole.ADMIN, UserRole.USER),
   likeController.unLike,
 );
+router.get(
+  "/post/:postId",
+  authMiddleware(UserRole.ADMIN, UserRole.USER),
+  likeController.getLikesByPostId,
+);
 
 export const likeRoutes = router;
