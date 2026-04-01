@@ -4,9 +4,9 @@ import {
   type Response,
   type NextFunction,
 } from "express";
-import { authMiddleware } from "../middlewares/auth";
-import { getUserById, updateUserProfile } from "../utils/authHelpers";
-import { prisma } from "../lib/prisma";
+import { authMiddleware } from "../../middlewares/auth";
+import { getUserById, updateUserProfile } from "../../utils/authHelpers";
+import { prisma } from "../../lib/prisma";
 
 const router = Router();
 
@@ -189,4 +189,4 @@ router.get(
   },
 );
 
-export default router;
+export const userRoutes = router;

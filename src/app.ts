@@ -1,12 +1,13 @@
 import express, { type Application } from "express";
 import dotenv from "dotenv";
 import cors from "cors";
-import userRoutes from "./routes/users";
 import { notFoundHandler } from "./middlewares/notFound";
 import errorHandler from "./middlewares/globalErrorHandler";
 import { envVars } from "./config/env";
 import { authRoutes } from "./modules/auth/auth.route";
 import { tokenRoutes } from "./modules/token/token.route";
+import { userRoutes } from "./modules/user/user.route";
+import { postRoutes } from "./modules/post/post.route";
 
 dotenv.config();
 
@@ -28,7 +29,8 @@ app.use(express.urlencoded({ extended: true }));
 // ==================== ROUTES ====================
 app.use("/api/auth", authRoutes);
 app.use("/api/token", tokenRoutes);
-app.use("/api/users", userRoutes);
+// app.use("/api/users", userRoutes);
+app.use("/api/posts", postRoutes);
 
 app.use("/api/health", (req, res) => {
   res.status(200).json({

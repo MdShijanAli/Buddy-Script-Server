@@ -1,5 +1,5 @@
 import type { NextFunction, Request, Response } from "express";
-import { auth as betterAuth } from "../lib/auth";
+import { verifyAccessToken } from "../lib/tokens";
 
 export enum UserRole {
   USER = "USER",
@@ -10,11 +10,9 @@ declare global {
   namespace Express {
     interface Request {
       user?: {
-        id: string;
-        name: string;
+        userId: string;
         email: string;
         role: string;
-        emailVerified: boolean;
       };
     }
   }
@@ -22,36 +20,51 @@ declare global {
 
 export const authMiddleware = (...roles: UserRole[]) => {
   return async (req: Request, res: Response, next: NextFunction) => {
-    const session = await betterAuth.api.getSession({
-      headers: req.headers as Record<string, string>,
-    });
+    try {
+      // Extract token from Authorization header
+      const authHeader = req.headers.authorization;
+      if (!authHeader || !authHeader.startsWith("Bearer ")) {
+        return res.status(401).json({
+          success: false,
+          message: "Missing or invalid token",
+          code: "MISSING_TOKEN",
+        });
+      }
 
-    if (!session || !session.user) {
-      return res.status(401).json({ success: false, message: "Unauthorized" });
-    }
+      const token = authHeader.slice(7); // Remove "Bearer " prefix
+      const payload = verifyAccessToken(token);
 
-    if (!session.user.emailVerified) {
-      return res
-        .status(403)
-        .json({ success: false, message: "Email not verified" });
-    }
+      if (!payload) {
+        return res.status(401).json({
+          success: false,
+          message: "Invalid or expired token",
+          code: "INVALID_TOKEN",
+        });
+      }
 
-    req.user = {
-      id: session.user.id,
-      name: session.user.name || "",
-      email: session.user.email || "",
-      role: session.user.role || UserRole.USER,
-      emailVerified: session.user.emailVerified || false,
-    };
+      req.user = {
+        userId: payload.userId,
+        email: payload.email,
+        role: payload.role,
+      };
 
-    if (roles.length && !roles.includes(req.user.role as UserRole)) {
-      return res.status(403).json({
+      // Check role if specified
+      if (roles.length && !roles.includes(payload.role as UserRole)) {
+        return res.status(403).json({
+          success: false,
+          message: "Insufficient permissions",
+          code: "FORBIDDEN",
+        });
+      }
+
+      next();
+    } catch (error: any) {
+      return res.status(401).json({
         success: false,
-        message: "You do not have permission to perform this action",
+        message: "Authentication failed",
+        code: "AUTH_ERROR",
       });
     }
-
-    next();
   };
 };
 
@@ -61,21 +74,21 @@ export const optionalAuthMiddleware = async (
   next: NextFunction,
 ) => {
   try {
-    const session = await betterAuth.api.getSession({
-      headers: req.headers as Record<string, string>,
-    });
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith("Bearer ")) {
+      const token = authHeader.slice(7);
+      const payload = verifyAccessToken(token);
 
-    if (session && session.user) {
-      req.user = {
-        id: session.user.id,
-        name: session.user.name || "",
-        email: session.user.email || "",
-        role: session.user.role || UserRole.USER,
-        emailVerified: session.user.emailVerified || false,
-      };
+      if (payload) {
+        req.user = {
+          userId: payload.userId,
+          email: payload.email,
+          role: payload.role,
+        };
+      }
     }
   } catch (error) {
-    // Silently continue if session check fails
+    // Silently continue if token check fails
   }
 
   next();
