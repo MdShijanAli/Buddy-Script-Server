@@ -9,6 +9,12 @@ const createPost = async (postPayload: PostCreateInput) => {
 
 const getPosts = async () => {
   const posts = await prisma.post.findMany({
+    where: {
+      visibility: "PUBLIC",
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
     include: {
       author: {
         select: {
@@ -17,9 +23,6 @@ const getPosts = async () => {
           name: true,
         },
       },
-    },
-    orderBy: {
-      createdAt: "desc",
     },
   });
   return posts;
