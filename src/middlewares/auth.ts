@@ -2,9 +2,8 @@ import type { NextFunction, Request, Response } from "express";
 import { auth as betterAuth } from "../lib/auth";
 
 export enum UserRole {
+  USER = "USER",
   ADMIN = "ADMIN",
-  TUTOR = "TUTOR",
-  STUDENT = "STUDENT",
 }
 
 declare global {
@@ -41,7 +40,7 @@ export const authMiddleware = (...roles: UserRole[]) => {
       id: session.user.id,
       name: session.user.name || "",
       email: session.user.email || "",
-      role: session.user.role || UserRole.STUDENT,
+      role: session.user.role || UserRole.USER,
       emailVerified: session.user.emailVerified || false,
     };
 
@@ -71,7 +70,7 @@ export const optionalAuthMiddleware = async (
         id: session.user.id,
         name: session.user.name || "",
         email: session.user.email || "",
-        role: session.user.role || UserRole.STUDENT,
+        role: session.user.role || UserRole.USER,
         emailVerified: session.user.emailVerified || false,
       };
     }

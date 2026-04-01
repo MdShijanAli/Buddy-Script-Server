@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import cors from "cors";
 import authRoutes from "./routes/auth";
 import userRoutes from "./routes/users";
+import tokenRoutes from "./routes/token";
 import { notFoundHandler } from "./middlewares/notFound";
 import errorHandler from "./middlewares/globalErrorHandler";
 
@@ -25,6 +26,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // ==================== ROUTES ====================
 app.use("/api/auth", authRoutes);
+app.use("/api/token", tokenRoutes);
 app.use("/api/users", userRoutes);
 
 app.use("/api/health", (req, res) => {
@@ -42,6 +44,7 @@ app.get("/", (req, res) => {
     version: "1.0.0",
     endpoints: {
       auth: "/api/auth",
+      token: "/api/token",
       users: "/api/users",
       health: "/api/health",
     },

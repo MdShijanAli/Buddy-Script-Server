@@ -1,7 +1,8 @@
 import type { Request, Response, NextFunction } from "express";
 import { Roles } from "../../generated/prisma/enums";
+import { generateTokens } from "../lib/tokens";
 
-const VALID_ROLES = ["ADMIN", "TUTOR", "STUDENT"] as Roles[];
+const VALID_ROLES = ["USER", "ADMIN"] as Roles[];
 
 export function betterAuthMiddleware(
   req: Request,
@@ -10,6 +11,11 @@ export function betterAuthMiddleware(
 ) {
   if (req.method === "POST" && req.path.includes("/sign-up")) {
     const body = req.body;
+
+    // Combine first_name and last_name into name if name is not provided
+    if (!body.name && (body.first_name || body.last_name)) {
+      body.name = `${body.first_name || ""} ${body.last_name || ""}`.trim();
+    }
 
     if (body.role) {
       const upperRole = body.role.toUpperCase();
@@ -30,6 +36,31 @@ export function betterAuthMiddleware(
     }
   }
 
+  // Intercept response to add tokens
+  const originalJson = res.json.bind(res);
+  res.json = function (data: any) {
+    // Add tokens for successful auth responses (sign-up, sign-in)
+    if (
+      data &&
+      typeof data === "object" &&
+      data.user &&
+      (req.path.includes("/sign-up") || req.path.includes("/sign-in"))
+    ) {
+      const tokens = generateTokens({
+        userId: data.user.id,
+        email: data.user.email,
+        role: data.user.role || "USER",
+      });
+
+      return originalJson({
+        ...data,
+        tokens,
+      });
+    }
+
+    return originalJson(data);
+  };
+
   next();
 }
 
@@ -47,17 +78,7 @@ export function betterAuthErrorHandler(
     body: req.body,
   });
 
-  // Handle email sending errors gracefully
-  if (
-    error.message &&
-    (error.message.includes("Failed to send verification email") ||
-      error.message.includes("Failed to send verification OTP"))
-  ) {
-    console.error("⚠️ Email sending failed, but request will succeed");
-    // Don't return error - let the request succeed
-    return;
-  }
-
+  // Handle validation errors
   if (error.message && error.message.includes("Invalid value for")) {
     const match = error.message.match(/Invalid value for (\w+)/);
     const field = match ? match[1] : "unknown field";
