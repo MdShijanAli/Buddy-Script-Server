@@ -1,5 +1,6 @@
 import type { NextFunction, Request, Response } from "express";
 import { Prisma } from "../../generated/prisma/client";
+import { envVars } from "../config/env";
 
 function errorHandler(
   err: any,
@@ -45,7 +46,7 @@ function errorHandler(
   } else {
     errorDetails = {
       message: err.message,
-      ...(process.env.NODE_ENV === "development" && { stack: err.stack }),
+      ...(envVars.NODE_ENV === "development" && { stack: err.stack }),
     };
   }
 

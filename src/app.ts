@@ -6,6 +6,7 @@ import userRoutes from "./routes/users";
 import tokenRoutes from "./routes/token";
 import { notFoundHandler } from "./middlewares/notFound";
 import errorHandler from "./middlewares/globalErrorHandler";
+import { envVars } from "./config/env";
 
 dotenv.config();
 
@@ -14,7 +15,7 @@ const app: Application = express();
 // ==================== MIDDLEWARE ====================
 app.use(
   cors({
-    origin: (process.env.CLIENT_URL || "http://localhost:3000").trim(),
+    origin: (envVars.CLIENT_URL || "http://localhost:3000").trim(),
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
     allowedHeaders: ["Content-Type", "Authorization"],
@@ -55,6 +56,6 @@ app.get("/", (req, res) => {
 app.use(errorHandler);
 app.use(notFoundHandler);
 
-export const PORT = process.env.PORT || 5000;
+export const PORT = envVars.PORT || 5000;
 
 export default app;

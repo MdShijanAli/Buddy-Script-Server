@@ -1,6 +1,7 @@
 import type { Request, Response, NextFunction } from "express";
 import { Roles } from "../../generated/prisma/enums";
 import { generateTokens } from "../lib/tokens";
+import { envVars } from "../config/env";
 
 const VALID_ROLES = ["USER", "ADMIN"] as Roles[];
 
@@ -44,13 +45,16 @@ export function betterAuthMiddleware(
       data &&
       typeof data === "object" &&
       data.user &&
-      (req.path.includes("/sign-up") || req.path.includes("/sign-in"))
+      (req.originalUrl.includes("/sign-up") ||
+        req.originalUrl.includes("/sign-in"))
     ) {
       const tokens = generateTokens({
         userId: data.user.id,
         email: data.user.email,
         role: data.user.role || "USER",
       });
+
+      console.log("Generate Tokens: ", tokens);
 
       return originalJson({
         ...data,
@@ -105,8 +109,7 @@ export function betterAuthErrorHandler(
       error: {
         code: error.code,
         message: error.message || "User creation failed",
-        details:
-          process.env.NODE_ENV === "development" ? error.stack : undefined,
+        details: envVars.NODE_ENV === "development" ? error.stack : undefined,
       },
     });
   }
