@@ -75,3 +75,13 @@ model Verification {
     @@index([identifier])
     @@map("verification")
 }
+
+model TokenBlacklist {
+    id        String   @id @default(cuid())
+    token     String   @unique
+    expiresAt DateTime
+    createdAt DateTime @default(now())
+
+    @@index([expiresAt])
+    @@map("token_blacklist")
+}

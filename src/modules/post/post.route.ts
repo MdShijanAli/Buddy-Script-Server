@@ -9,5 +9,15 @@ router.post(
   authMiddleware(UserRole.USER, UserRole.ADMIN),
   postController.createPost,
 );
+router.get(
+  "/",
+  authMiddleware(UserRole.USER, UserRole.ADMIN),
+  postController.getPosts,
+);
+router.get(
+  "/my-posts",
+  authMiddleware(UserRole.USER, UserRole.ADMIN),
+  postController.getMyPosts,
+);
 
 export const postRoutes = router;

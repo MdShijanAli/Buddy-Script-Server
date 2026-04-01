@@ -1,5 +1,5 @@
 import { auth } from "../../lib/auth";
-import { refreshAccessToken } from "../../lib/tokens";
+import { blacklistToken } from "../../lib/tokens";
 
 interface LoginPayload {
   email: string;
@@ -35,7 +35,23 @@ const register = async (payload: RegisterPayload) => {
   return result;
 };
 
+const logout = async (token: string) => {
+  // Remove "Bearer " prefix if present
+  const cleanToken = token.startsWith("Bearer ") ? token.slice(7) : token;
+
+  // Add token to blacklist
+  await blacklistToken(cleanToken);
+
+  // Also logout from BetterAuth session
+  await auth.api.signOut({
+    headers: {
+      Authorization: token,
+    },
+  });
+};
+
 export const authService = {
   login,
   register,
+  logout,
 };

@@ -36,6 +36,68 @@ const createPost = async (req: Request, res: Response) => {
   }
 };
 
+const getPosts = async (req: Request, res: Response) => {
+  try {
+    const userId = (req as any).user?.userId;
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: "Authentication required",
+        code: "AUTH_REQUIRED",
+      });
+    }
+    const posts = await postService.getPosts();
+    res.json({
+      success: true,
+      message: "Posts retrieved successfully",
+      posts,
+    });
+  } catch (error: any) {
+    console.error("Get Posts Error: ", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to retrieve posts",
+      code: "GET_POSTS_ERROR",
+      error: {
+        message:
+          error.message?.split("\n").pop().trim() || error.message || error,
+      },
+    });
+  }
+};
+
+const getMyPosts = async (req: Request, res: Response) => {
+  try {
+    const userId = (req as any).user?.userId;
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: "Authentication required",
+        code: "AUTH_REQUIRED",
+      });
+    }
+    const posts = await postService.getMyPosts(userId);
+    res.json({
+      success: true,
+      message: "My posts retrieved successfully",
+      posts,
+    });
+  } catch (error: any) {
+    console.error("Get My Posts Error: ", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to retrieve my posts",
+      code: "GET_MY_POSTS_ERROR",
+      error: {
+        message:
+          error.message?.split("\n").pop().trim() || error.message || error,
+      },
+    });
+  }
+};
+
 export const postController = {
   createPost,
+  getPosts,
+  getMyPosts,
 };

@@ -1,5 +1,5 @@
 import type { NextFunction, Request, Response } from "express";
-import { verifyAccessToken } from "../lib/tokens";
+import { verifyAccessToken, isTokenBlacklisted } from "../lib/tokens";
 
 export enum UserRole {
   USER = "USER",
@@ -42,6 +42,16 @@ export const authMiddleware = (...roles: UserRole[]) => {
         });
       }
 
+      // Check if token is blacklisted
+      const blacklisted = await isTokenBlacklisted(token);
+      if (blacklisted) {
+        return res.status(401).json({
+          success: false,
+          message: "Token has been revoked",
+          code: "TOKEN_REVOKED",
+        });
+      }
+
       req.user = {
         userId: payload.userId,
         email: payload.email,
@@ -80,11 +90,14 @@ export const optionalAuthMiddleware = async (
       const payload = verifyAccessToken(token);
 
       if (payload) {
-        req.user = {
-          userId: payload.userId,
-          email: payload.email,
-          role: payload.role,
-        };
+        const blacklisted = await isTokenBlacklisted(token);
+        if (!blacklisted) {
+          req.user = {
+            userId: payload.userId,
+            email: payload.email,
+            role: payload.role,
+          };
+        }
       }
     }
   } catch (error) {

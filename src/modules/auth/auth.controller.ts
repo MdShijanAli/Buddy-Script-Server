@@ -69,7 +69,25 @@ const register = async (req: Request, res: Response) => {
   }
 };
 
+const logout = async (req: Request, res: Response) => {
+  try {
+    await authService.logout(req.headers.authorization || "");
+    res.json({
+      success: true,
+      message: "Logout successful",
+    });
+  } catch (error: any) {
+    console.error("Logout error: ", error);
+    return res.status(500).json({
+      success: false,
+      message: "Logout failed",
+      code: "LOGOUT_ERROR",
+    });
+  }
+};
+
 export const authController = {
   login,
   register,
+  logout,
 };

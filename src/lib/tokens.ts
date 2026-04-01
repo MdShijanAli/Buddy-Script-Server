@@ -83,6 +83,12 @@ export async function refreshAccessToken(
     return null;
   }
 
+  // Check if refresh token is blacklisted
+  const isBlacklisted = await isTokenBlacklisted(refreshToken);
+  if (isBlacklisted) {
+    return null;
+  }
+
   // Verify user still exists
   const user = await prisma.user.findUnique({
     where: { id: payload.userId },
@@ -97,4 +103,64 @@ export async function refreshAccessToken(
     email: user.email,
     role: user.role,
   });
+}
+
+/**
+ * Add token to blacklist (on logout)
+ */
+export async function blacklistToken(token: string): Promise<void> {
+  try {
+    const decoded = jwt.decode(token) as any;
+    if (!decoded || !decoded.exp) {
+      return;
+    }
+
+    const expiresAt = new Date(decoded.exp * 1000);
+
+    await prisma.tokenBlacklist.create({
+      data: {
+        token,
+        expiresAt,
+      },
+    });
+
+    console.log("✅ Token blacklisted");
+  } catch (error) {
+    console.error("Failed to blacklist token:", error);
+  }
+}
+
+/**
+ * Check if token is blacklisted
+ */
+export async function isTokenBlacklisted(token: string): Promise<boolean> {
+  try {
+    const blacklistedToken = await prisma.tokenBlacklist.findUnique({
+      where: { token },
+    });
+
+    return !!blacklistedToken;
+  } catch (error) {
+    console.error("Failed to check token blacklist:", error);
+    return false;
+  }
+}
+
+/**
+ * Clean up expired tokens from blacklist (run periodically)
+ */
+export async function cleanupExpiredTokens(): Promise<void> {
+  try {
+    const result = await prisma.tokenBlacklist.deleteMany({
+      where: {
+        expiresAt: {
+          lt: new Date(),
+        },
+      },
+    });
+
+    console.log(`🧹 Cleaned up ${result.count} expired tokens`);
+  } catch (error) {
+    console.error("Failed to cleanup expired tokens:", error);
+  }
 }
