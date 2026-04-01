@@ -1,5 +1,5 @@
 import { Router, type Request, type Response } from "express";
-import { refreshAccessToken } from "../lib/tokens";
+import { refreshAccessToken } from "../../lib/tokens";
 
 const router = Router();
 
@@ -47,4 +47,4 @@ router.post("/refresh", async (req: Request, res: Response) => {
   }
 });
 
-export default router;
+export const tokenRoutes = router;

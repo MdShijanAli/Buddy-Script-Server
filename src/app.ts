@@ -2,11 +2,11 @@ import express, { type Application } from "express";
 import dotenv from "dotenv";
 import cors from "cors";
 import userRoutes from "./routes/users";
-import tokenRoutes from "./routes/token";
 import { notFoundHandler } from "./middlewares/notFound";
 import errorHandler from "./middlewares/globalErrorHandler";
 import { envVars } from "./config/env";
 import { authRoutes } from "./modules/auth/auth.route";
+import { tokenRoutes } from "./modules/token/token.route";
 
 dotenv.config();
 
