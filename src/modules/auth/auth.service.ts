@@ -1,4 +1,5 @@
 import { auth } from "../../lib/auth";
+import { prisma } from "../../lib/prisma";
 import { blacklistToken } from "../../lib/tokens";
 
 interface LoginPayload {
@@ -9,7 +10,7 @@ interface LoginPayload {
 interface RegisterPayload {
   email: string;
   password: string;
-  name: string;
+  name?: string;
   first_name?: string;
   last_name?: string;
   role?: string;
@@ -25,13 +26,24 @@ const login = async (payload: LoginPayload) => {
 };
 
 const register = async (payload: RegisterPayload) => {
-  if (!payload.name && (payload.first_name || payload.last_name)) {
-    payload.name =
-      `${payload.first_name || ""} ${payload.last_name || ""}`.trim();
-  }
+  // Build the body for BetterAuth
+  const authBody: any = {
+    email: payload.email,
+    password: payload.password,
+    name:
+      payload.name ||
+      `${payload.first_name || ""} ${payload.last_name || ""}`.trim(),
+  };
+
+  // Add camelCase fields for BetterAuth
+  if (payload.first_name) authBody.firstName = payload.first_name;
+  if (payload.last_name) authBody.lastName = payload.last_name;
+  if (payload.role) authBody.role = payload.role;
+
   const result = await auth.api.signUpEmail({
-    body: payload,
+    body: authBody,
   });
+  console.log("Register Result: ", result);
   return result;
 };
 
