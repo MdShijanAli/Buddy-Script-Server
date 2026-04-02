@@ -9,6 +9,8 @@ import { tokenRoutes } from "./modules/token/token.route";
 import { userRoutes } from "./modules/user/user.route";
 import { postRoutes } from "./modules/post/post.route";
 import { likeRoutes } from "./modules/like/like.route";
+import { commentRoutes } from "./modules/comment/comment.route";
+import { replyRoutes } from "./modules/reply/reply.route";
 
 dotenv.config();
 
@@ -33,6 +35,8 @@ app.use("/api/token", tokenRoutes);
 // app.use("/api/users", userRoutes);
 app.use("/api/posts", postRoutes);
 app.use("/api/likes", likeRoutes);
+app.use("/api/comments", commentRoutes);
+app.use("/api/replies", replyRoutes);
 
 app.use("/api/health", (req, res) => {
   res.status(200).json({
