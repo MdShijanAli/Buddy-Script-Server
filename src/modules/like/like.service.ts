@@ -41,9 +41,10 @@ const createPostLike = async (payload: LikeCreateInput) => {
 const createCommentLike = async (payload: LikeCreateInput) => {
   const userId = payload.user.connect.id;
   const commentId = payload.comment?.connect?.id;
+  const postId = payload.post?.connect?.id;
 
   const existingLike = await prisma.like.findFirst({
-    where: { userId, commentId },
+    where: { userId, commentId, postId },
   });
   if (existingLike) {
     throw new Error("You have already liked this comment");

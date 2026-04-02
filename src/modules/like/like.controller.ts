@@ -53,6 +53,7 @@ const createCommentLike = async (req: Request, res: Response) => {
   try {
     const userId = (req as any).user?.userId;
     const commentId = req.params.commentId;
+    const { postId } = req.query;
     if (!userId) {
       return res.status(401).json({
         success: false,
@@ -70,6 +71,7 @@ const createCommentLike = async (req: Request, res: Response) => {
     const like = await likeService.createCommentLike({
       user: { connect: { id: userId } },
       comment: { connect: { id: commentId } },
+      post: postId ? { connect: { id: String(postId) } } : undefined,
     });
     res.json({
       success: true,
