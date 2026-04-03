@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { replyService } from "./reply.service";
+import { envVars } from "../../config/env";
 
 const createReply = async (req: Request, res: Response) => {
   try {
@@ -22,10 +23,24 @@ const createReply = async (req: Request, res: Response) => {
       });
     }
 
+    const uploadedFiles = (
+      req as Request & {
+        files?: { [fieldname: string]: Express.Multer.File[] };
+      }
+    ).files;
+    const uploadedFile =
+      uploadedFiles?.image?.[0] ||
+      uploadedFiles?.imageUrl?.[0] ||
+      uploadedFiles?.file?.[0];
+    const imageUrl = uploadedFile
+      ? `${envVars.BETTER_AUTH_URL}/uploads/posts/${uploadedFile.filename}`
+      : undefined;
+
     const result = await replyService.createReply({
       content: req.body.content,
       commentId,
       authorId: userId,
+      imageUrl,
     });
 
     res.status(201).json({

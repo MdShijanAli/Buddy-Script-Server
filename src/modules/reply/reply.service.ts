@@ -4,6 +4,7 @@ interface CreateReplyInput {
   content: string;
   commentId: string;
   authorId: string;
+  imageUrl?: string;
 }
 
 interface UpdateReplyInput {
@@ -16,6 +17,7 @@ const createReply = async (payload: CreateReplyInput) => {
       content: payload.content,
       commentId: payload.commentId,
       authorId: payload.authorId,
+      imageUrl: payload.imageUrl,
     },
     include: {
       author: {
