@@ -1,10 +1,11 @@
 import { Request, Response } from "express";
 import { postService } from "./post.service";
+import { envVars } from "../../config/env";
 
 const createPost = async (req: Request, res: Response) => {
   try {
     const userId = (req as any).user?.userId;
-    console.log("Request User----->", req.user);
+
     if (!userId) {
       return res.status(401).json({
         success: false,
@@ -13,8 +14,24 @@ const createPost = async (req: Request, res: Response) => {
       });
     }
 
+    const uploadedFiles = (
+      req as Request & {
+        files?: { [fieldname: string]: Express.Multer.File[] };
+      }
+    ).files;
+    const uploadedFile =
+      uploadedFiles?.image?.[0] ||
+      uploadedFiles?.imageUrl?.[0] ||
+      uploadedFiles?.file?.[0];
+    const imageUrl = uploadedFile
+      ? `${envVars.BETTER_AUTH_URL}/uploads/posts/${uploadedFile.filename}`
+      : undefined;
+
     const result = await postService.createPost({
-      ...req.body,
+      title: req.body.title,
+      content: req.body.content,
+      visibility: req.body.visibility,
+      imageUrl,
       author: { connect: { id: userId } },
     });
     res.json({

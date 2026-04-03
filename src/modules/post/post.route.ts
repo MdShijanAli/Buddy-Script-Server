@@ -1,12 +1,18 @@
 import { Router } from "express";
 import { postController } from "./post.controller";
 import { authMiddleware, UserRole } from "../../middlewares/auth";
+import { uploadPostImage } from "../../middlewares/upload";
 
 const router = Router();
 
 router.post(
   "/",
   authMiddleware(UserRole.USER, UserRole.ADMIN),
+  uploadPostImage.fields([
+    { name: "image", maxCount: 1 },
+    { name: "imageUrl", maxCount: 1 },
+    { name: "file", maxCount: 1 },
+  ]),
   postController.createPost,
 );
 router.get(

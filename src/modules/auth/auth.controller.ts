@@ -29,6 +29,10 @@ const login = async (req: Request, res: Response) => {
       success: false,
       message: "Login failed",
       code: "LOGIN_ERROR",
+      error: {
+        message:
+          error.message?.split("\n").pop().trim() || error.message || error,
+      },
     });
   }
 };
@@ -61,9 +65,8 @@ const register = async (req: Request, res: Response) => {
       message: "Registration failed",
       code: "REGISTRATION_ERROR",
       error: {
-        code: error.code,
-        message: error.message,
-        details: error.stack,
+        message:
+          error.message?.split("\n").pop().trim() || error.message || error,
       },
     });
   }
@@ -82,6 +85,10 @@ const logout = async (req: Request, res: Response) => {
       success: false,
       message: "Logout failed",
       code: "LOGOUT_ERROR",
+      error: {
+        message:
+          error.message?.split("\n").pop().trim() || error.message || error,
+      },
     });
   }
 };

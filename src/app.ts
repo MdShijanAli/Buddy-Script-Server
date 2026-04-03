@@ -1,6 +1,7 @@
 import express, { type Application } from "express";
 import dotenv from "dotenv";
 import cors from "cors";
+import path from "path";
 import { notFoundHandler } from "./middlewares/notFound";
 import errorHandler from "./middlewares/globalErrorHandler";
 import { envVars } from "./config/env";
@@ -19,7 +20,7 @@ const app: Application = express();
 // ==================== MIDDLEWARE ====================
 app.use(
   cors({
-    origin: (envVars.CLIENT_URL || "http://localhost:3000").trim(),
+    origin: (envVars.CLIENT_URL || "http://localhost:5173").trim(),
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
     allowedHeaders: ["Content-Type", "Authorization"],
@@ -28,6 +29,7 @@ app.use(
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 
 // ==================== ROUTES ====================
 app.use("/api/auth", authRoutes);
