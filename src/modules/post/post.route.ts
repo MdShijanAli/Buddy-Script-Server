@@ -25,5 +25,10 @@ router.get(
   authMiddleware(UserRole.USER, UserRole.ADMIN),
   postController.getMyPosts,
 );
+router.delete(
+  "/:postId",
+  authMiddleware(UserRole.USER, UserRole.ADMIN),
+  postController.deletePost,
+);
 
 export const postRoutes = router;

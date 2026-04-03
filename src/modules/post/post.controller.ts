@@ -113,8 +113,33 @@ const getMyPosts = async (req: Request, res: Response) => {
   }
 };
 
+const deletePost = async (req: Request, res: Response) => {
+  try {
+    const userId = (req as any).user?.userId;
+    const { postId } = req.params;
+    const result = await postService.deletePost(postId, userId);
+    res.json({
+      success: true,
+      message: "Post deleted successfully",
+      post: result,
+    });
+  } catch (error: any) {
+    console.error("Delete Post Error: ", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to delete post",
+      code: "DELETE_POST_ERROR",
+      error: {
+        message:
+          error.message?.split("\n").pop().trim() || error.message || error,
+      },
+    });
+  }
+};
+
 export const postController = {
   createPost,
   getPosts,
   getMyPosts,
+  deletePost,
 };
