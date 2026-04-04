@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { commentService } from "./comment.service";
+import { envVars } from "../../config/env";
 
 const createComment = async (req: Request, res: Response) => {
   try {
@@ -14,7 +15,7 @@ const createComment = async (req: Request, res: Response) => {
       });
     }
 
-    if (!postId) {
+    if (!postId || Array.isArray(postId)) {
       return res.status(400).json({
         success: false,
         message: "Post ID is required",
@@ -22,10 +23,32 @@ const createComment = async (req: Request, res: Response) => {
       });
     }
 
+    const uploadedFiles = (
+      req as Request & {
+        files?: { [fieldname: string]: Express.Multer.File[] };
+      }
+    ).files;
+    const uploadedFile =
+      uploadedFiles?.image?.[0] ||
+      uploadedFiles?.imageUrl?.[0] ||
+      uploadedFiles?.file?.[0];
+    const imageUrl = uploadedFile
+      ? `${envVars.BETTER_AUTH_URL}/uploads/posts/${uploadedFile.filename}`
+      : undefined;
+
+    if (!req.body.content && !imageUrl) {
+      return res.status(400).json({
+        success: false,
+        message: "Comment content or image is required",
+        code: "CONTENT_OR_IMAGE_REQUIRED",
+      });
+    }
+
     const result = await commentService.createComment({
       content: req.body.content,
       postId,
       authorId: userId,
+      imageUrl,
     });
 
     res.status(201).json({
@@ -51,7 +74,7 @@ const getCommentsByPostId = async (req: Request, res: Response) => {
   try {
     const { postId } = req.params;
 
-    if (!postId) {
+    if (!postId || Array.isArray(postId)) {
       return res.status(400).json({
         success: false,
         message: "Post ID is required",
@@ -93,7 +116,7 @@ const updateComment = async (req: Request, res: Response) => {
       });
     }
 
-    if (!commentId) {
+    if (!commentId || Array.isArray(commentId)) {
       return res.status(400).json({
         success: false,
         message: "Comment ID is required",
@@ -101,8 +124,30 @@ const updateComment = async (req: Request, res: Response) => {
       });
     }
 
+    const uploadedFiles = (
+      req as Request & {
+        files?: { [fieldname: string]: Express.Multer.File[] };
+      }
+    ).files;
+    const uploadedFile =
+      uploadedFiles?.image?.[0] ||
+      uploadedFiles?.imageUrl?.[0] ||
+      uploadedFiles?.file?.[0];
+    const imageUrl = uploadedFile
+      ? `${envVars.BETTER_AUTH_URL}/uploads/posts/${uploadedFile.filename}`
+      : undefined;
+
+    if (!req.body.content && !imageUrl) {
+      return res.status(400).json({
+        success: false,
+        message: "At least content or image is required to update",
+        code: "UPDATE_FIELD_REQUIRED",
+      });
+    }
+
     const result = await commentService.updateComment(commentId, userId, {
       content: req.body.content,
+      imageUrl,
     });
 
     res.json({
@@ -124,6 +169,13 @@ const updateComment = async (req: Request, res: Response) => {
         success: false,
         message: "You can only update your own comments",
         code: "UNAUTHORIZED",
+      });
+    }
+    if (error.message === "At least one field is required to update") {
+      return res.status(400).json({
+        success: false,
+        message: "At least one field is required to update",
+        code: "UPDATE_FIELD_REQUIRED",
       });
     }
     res.status(500).json({
@@ -151,7 +203,7 @@ const deleteComment = async (req: Request, res: Response) => {
       });
     }
 
-    if (!commentId) {
+    if (!commentId || Array.isArray(commentId)) {
       return res.status(400).json({
         success: false,
         message: "Comment ID is required",

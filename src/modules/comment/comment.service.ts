@@ -4,10 +4,12 @@ interface CreateCommentInput {
   content: string;
   postId: string;
   authorId: string;
+  imageUrl?: string;
 }
 
 interface UpdateCommentInput {
-  content: string;
+  content?: string;
+  imageUrl?: string;
 }
 
 const createComment = async (payload: CreateCommentInput) => {
@@ -16,6 +18,7 @@ const createComment = async (payload: CreateCommentInput) => {
       content: payload.content,
       postId: payload.postId,
       authorId: payload.authorId,
+      imageUrl: payload.imageUrl,
     },
     include: {
       author: {
@@ -85,10 +88,15 @@ const updateComment = async (
     throw new Error("Unauthorized");
   }
 
+  if (!payload.content && !payload.imageUrl) {
+    throw new Error("At least one field is required to update");
+  }
+
   const result = await prisma.comment.update({
     where: { id: commentId },
     data: {
       content: payload.content,
+      imageUrl: payload.imageUrl,
     },
     include: {
       author: {
