@@ -12,22 +12,40 @@ interface UpdateReplyInput {
 }
 
 const createReply = async (payload: CreateReplyInput) => {
-  const result = await prisma.reply.create({
-    data: {
-      content: payload.content,
-      commentId: payload.commentId,
-      authorId: payload.authorId,
-      imageUrl: payload.imageUrl,
-    },
-    include: {
-      author: {
-        select: {
-          id: true,
-          email: true,
-          name: true,
+  const result = await prisma.$transaction(async (transaction) => {
+    const comment = await transaction.comment.findUnique({
+      where: { id: payload.commentId },
+      select: { postId: true },
+    });
+
+    if (!comment) {
+      throw new Error("Comment not found");
+    }
+
+    const reply = await transaction.reply.create({
+      data: {
+        content: payload.content,
+        commentId: payload.commentId,
+        authorId: payload.authorId,
+        imageUrl: payload.imageUrl,
+      },
+      include: {
+        author: {
+          select: {
+            id: true,
+            email: true,
+            name: true,
+          },
         },
       },
-    },
+    });
+
+    await transaction.post.update({
+      where: { id: comment.postId },
+      data: { commentsCount: { increment: 1 } },
+    });
+
+    return reply;
   });
   console.log("Reply Created: ", result);
   return result;
@@ -108,8 +126,26 @@ const deleteReply = async (replyId: string, userId: string) => {
     throw new Error("Unauthorized");
   }
 
-  const result = await prisma.reply.delete({
-    where: { id: replyId },
+  const result = await prisma.$transaction(async (transaction) => {
+    const deletedReply = await transaction.reply.delete({
+      where: { id: replyId },
+    });
+
+    const comment = await transaction.comment.findUnique({
+      where: { id: reply.commentId },
+      select: { postId: true },
+    });
+
+    if (!comment) {
+      throw new Error("Comment not found");
+    }
+
+    await transaction.post.update({
+      where: { id: comment.postId },
+      data: { commentsCount: { decrement: 1 } },
+    });
+
+    return deletedReply;
   });
 
   console.log("Reply Deleted: ", result);

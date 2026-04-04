@@ -26,6 +26,7 @@
     "migrate": "npx prisma migrate dev",
     "generate": "npx prisma generate",
     "show:db": "npx prisma studio",
+    "backfill:comments-count": "tsx src/script/backfillCommentsCount.ts",
     "generate:auth": "npx @better-auth/cli generate",
     "seed:admin": "tsx src/script/seedAdmin.ts",
     "build": "prisma generate && tsc",

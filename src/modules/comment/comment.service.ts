@@ -20,7 +20,17 @@ const createComment = async (payload: CreateCommentInput) => {
       authorId: payload.authorId,
       imageUrl: payload.imageUrl,
     },
-    include: {
+  });
+
+  const updatedPost = await prisma.post.update({
+    where: { id: payload.postId },
+    data: { commentsCount: { increment: 1 } },
+    select: {
+      id: true,
+      content: true,
+      visibility: true,
+      commentsCount: true,
+      likesCount: true,
       author: {
         select: {
           id: true,
@@ -31,8 +41,13 @@ const createComment = async (payload: CreateCommentInput) => {
       },
     },
   });
+
   console.log("Comment Created: ", result);
-  return result;
+  return {
+    id: result.id,
+    createdAt: result.createdAt,
+    post: updatedPost,
+  };
 };
 
 const getCommentsByPostId = async (postId: string) => {
@@ -129,8 +144,21 @@ const deleteComment = async (commentId: string, userId: string) => {
     throw new Error("Unauthorized");
   }
 
-  const result = await prisma.comment.delete({
-    where: { id: commentId },
+  const result = await prisma.$transaction(async (transaction) => {
+    const replyCount = await transaction.reply.count({
+      where: { commentId },
+    });
+
+    const deletedComment = await transaction.comment.delete({
+      where: { id: commentId },
+    });
+
+    await transaction.post.update({
+      where: { id: comment.postId },
+      data: { commentsCount: { decrement: 1 + replyCount } },
+    });
+
+    return deletedComment;
   });
 
   console.log("Comment Deleted: ", result);

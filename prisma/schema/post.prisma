@@ -1,15 +1,16 @@
 model Post {
-    id          String   @id @default(cuid())
-    authorId    String
-    author      User     @relation("PostAuthor", fields: [authorId], references: [id], onDelete: Cascade)
-    title       String?
-    content     String
-    imageUrl    String?
-    visibility  String   @default("PUBLIC") // PostVisibility: PUBLIC or PRIVATE
-    isPublished Boolean  @default(true)
-    likesCount  Int      @default(0)
-    createdAt   DateTime @default(now())
-    updatedAt   DateTime @updatedAt
+    id            String   @id @default(cuid())
+    authorId      String
+    author        User     @relation("PostAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+    title         String?
+    content       String
+    imageUrl      String?
+    visibility    String   @default("PUBLIC") // PostVisibility: PUBLIC or PRIVATE
+    isPublished   Boolean  @default(true)
+    likesCount    Int      @default(0)
+    commentsCount Int      @default(0)
+    createdAt     DateTime @default(now())
+    updatedAt     DateTime @updatedAt
 
     likes    Like[]
     comments Comment[]

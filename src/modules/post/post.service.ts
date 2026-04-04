@@ -1,6 +1,15 @@
 import { PostCreateInput } from "../../../generated/prisma/models";
 import { prisma } from "../../lib/prisma";
 
+const getTotalDiscussionCount = (post: {
+  comments: Array<{ replies: Array<{ id: string }> }>;
+}) => {
+  return post.comments.reduce(
+    (total, comment) => total + 1 + comment.replies.length,
+    0,
+  );
+};
+
 const createPost = async (postPayload: PostCreateInput) => {
   const result = await prisma.post.create({ data: postPayload });
   console.log("Post Created: ", result);
@@ -37,9 +46,22 @@ const getPosts = async () => {
           },
         },
       },
+      comments: {
+        select: {
+          id: true,
+          replies: {
+            select: {
+              id: true,
+            },
+          },
+        },
+      },
     },
   });
-  return posts;
+  return posts.map((post) => ({
+    ...post,
+    commentsCount: getTotalDiscussionCount(post),
+  }));
 };
 
 const getMyPosts = async (userId: string) => {
@@ -69,12 +91,25 @@ const getMyPosts = async (userId: string) => {
           },
         },
       },
+      comments: {
+        select: {
+          id: true,
+          replies: {
+            select: {
+              id: true,
+            },
+          },
+        },
+      },
     },
     orderBy: {
       createdAt: "desc",
     },
   });
-  return posts;
+  return posts.map((post) => ({
+    ...post,
+    commentsCount: getTotalDiscussionCount(post),
+  }));
 };
 
 const deletePost = async (postId: string, userId: string) => {
