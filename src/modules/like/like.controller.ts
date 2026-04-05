@@ -35,6 +35,10 @@ const createPostLike = async (req: Request, res: Response) => {
         success: false,
         message: error.message,
         code: "ALREADY_LIKED",
+        error: {
+          message:
+            error.message?.split("\n").pop().trim() || error.message || error,
+        },
       });
     }
     res.status(500).json({
@@ -165,11 +169,10 @@ const unLike = async (req: Request, res: Response) => {
         code: "LIKE_ID_REQUIRED",
       });
     }
-    const result = await likeService.unLike(likeId);
+    await likeService.unLike(likeId);
     res.json({
       success: true,
       message: "Like removed successfully",
-      like: result,
     });
   } catch (error: any) {
     console.error("Unlike Error: ", error);

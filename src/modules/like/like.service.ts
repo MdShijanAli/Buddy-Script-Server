@@ -117,82 +117,32 @@ const unLike = async (likeId: string) => {
     throw new Error("Like not found");
   }
 
+  console.log("Unliking: ", like);
+
   await prisma.like.delete({ where: { id: likeId } });
 
   // Update likes count for the associated post
   if (like.postId) {
-    const updatedPost = await prisma.post.update({
+    await prisma.post.update({
       where: { id: like.postId },
       data: { likesCount: { decrement: 1 } },
-      select: {
-        id: true,
-        content: true,
-        visibility: true,
-        likesCount: true,
-        author: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-      },
     });
-
-    return {
-      id: like.id,
-      createdAt: like.createdAt,
-      post: updatedPost,
-    };
   }
 
   // Update likes count for the associated comment
   if (like.commentId) {
-    const updatedComment = await prisma.comment.update({
+    await prisma.comment.update({
       where: { id: like.commentId },
       data: { likesCount: { decrement: 1 } },
-      select: {
-        id: true,
-        content: true,
-        likesCount: true,
-        author: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-      },
     });
-
-    return {
-      id: like.id,
-      createdAt: like.createdAt,
-      comment: updatedComment,
-    };
   }
 
   // Update likes count for the associated reply
   if (like.replyId) {
-    const updatedReply = await prisma.reply.update({
+    await prisma.reply.update({
       where: { id: like.replyId },
       data: { likesCount: { decrement: 1 } },
-      select: {
-        id: true,
-        content: true,
-        likesCount: true,
-        author: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-      },
     });
-
-    return {
-      id: like.id,
-      createdAt: like.createdAt,
-      reply: updatedReply,
-    };
   }
 };
 

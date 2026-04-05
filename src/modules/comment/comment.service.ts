@@ -20,6 +20,12 @@ const createComment = async (payload: CreateCommentInput) => {
       authorId: payload.authorId,
       imageUrl: payload.imageUrl,
     },
+    select: {
+      id: true,
+      content: true,
+      imageUrl: true,
+      createdAt: true,
+    },
   });
 
   const updatedPost = await prisma.post.update({
@@ -46,7 +52,7 @@ const createComment = async (payload: CreateCommentInput) => {
   return {
     id: result.id,
     createdAt: result.createdAt,
-    post: updatedPost,
+    post: { ...result, ...updatedPost },
   };
 };
 
@@ -64,6 +70,12 @@ const getCommentsByPostId = async (postId: string) => {
           profile_image: true,
         },
       },
+      likes: {
+        select: {
+          id: true,
+          userId: true,
+        },
+      },
       replies: {
         include: {
           author: {
@@ -72,6 +84,12 @@ const getCommentsByPostId = async (postId: string) => {
               email: true,
               name: true,
               profile_image: true,
+            },
+          },
+          likes: {
+            select: {
+              id: true,
+              userId: true,
             },
           },
         },
