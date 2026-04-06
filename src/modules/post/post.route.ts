@@ -15,6 +15,18 @@ router.post(
   ]),
   postController.createPost,
 );
+
+router.put(
+  "/:postId",
+  authMiddleware(UserRole.USER, UserRole.ADMIN),
+  uploadPostImage.fields([
+    { name: "image", maxCount: 1 },
+    { name: "imageUrl", maxCount: 1 },
+    { name: "file", maxCount: 1 },
+  ]),
+  postController.updatePost,
+);
+
 router.get(
   "/",
   authMiddleware(UserRole.USER, UserRole.ADMIN),

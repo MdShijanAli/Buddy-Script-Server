@@ -53,6 +53,68 @@ const createPost = async (req: Request, res: Response) => {
   }
 };
 
+const updatePost = async (req: Request, res: Response) => {
+  try {
+    const userId = (req as any).user?.userId;
+    const { postId } = req.params;
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: "Authentication required",
+        code: "AUTH_REQUIRED",
+      });
+    }
+    const uploadedFiles = (
+      req as Request & {
+        files?: { [fieldname: string]: Express.Multer.File[] };
+      }
+    ).files;
+    const uploadedFile =
+      uploadedFiles?.image?.[0] ||
+      uploadedFiles?.imageUrl?.[0] ||
+      uploadedFiles?.file?.[0];
+
+    const removeImage =
+      req.body.removeImage === true ||
+      req.body.removeImage === "true" ||
+      req.body.removeImage === 1 ||
+      req.body.removeImage === "1";
+
+    const imageUrl = uploadedFile
+      ? `${envVars.BETTER_AUTH_URL}/uploads/posts/${uploadedFile.filename}`
+      : removeImage
+        ? null
+        : undefined;
+
+    const result = await postService.updatePost(
+      postId,
+      {
+        title: req.body.title,
+        content: req.body.content,
+        visibility: req.body.visibility,
+        imageUrl,
+      },
+      userId,
+    );
+    res.json({
+      success: true,
+      message: "Post updated successfully",
+      post: result,
+    });
+  } catch (error: any) {
+    console.error("Update Post Error: ", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to update post",
+      code: "UPDATE_POST_ERROR",
+      error: {
+        message:
+          error.message?.split("\n").pop().trim() || error.message || error,
+      },
+    });
+  }
+};
+
 const getPosts = async (req: Request, res: Response) => {
   try {
     const userId = (req as any).user?.userId;
@@ -139,6 +201,7 @@ const deletePost = async (req: Request, res: Response) => {
 
 export const postController = {
   createPost,
+  updatePost,
   getPosts,
   getMyPosts,
   deletePost,

@@ -16,6 +16,32 @@ const createPost = async (postPayload: PostCreateInput) => {
   return result;
 };
 
+const updatePost = async (
+  postId: string,
+  postPayload: PostCreateInput,
+  userId: string,
+) => {
+  const post = await prisma.post.findUnique({
+    where: { id: postId },
+  });
+
+  if (!post) {
+    throw new Error("Post not found");
+  }
+
+  if (post.authorId !== userId) {
+    throw new Error("You are not authorized to update this post");
+  }
+
+  const result = await prisma.post.update({
+    where: { id: postId },
+    data: postPayload,
+  });
+
+  console.log("Post Updated: ", result);
+  return result;
+};
+
 const getPosts = async () => {
   const posts = await prisma.post.findMany({
     where: {
@@ -138,4 +164,5 @@ export const postService = {
   getPosts,
   getMyPosts,
   deletePost,
+  updatePost,
 };
