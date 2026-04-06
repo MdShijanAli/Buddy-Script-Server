@@ -31,6 +31,7 @@
     "seed:admin": "tsx src/script/seedAdmin.ts",
     "build": "prisma generate && tsc",
     "build:vercel": "prisma generate && tsup src/index.ts --format esm --platform node --target node20 --outDir api --external pg-native",
+    "deploy:vercel": "vercel --prod",
     "postinstall": "prisma generate",
     "reset:db": "npx prisma migrate reset",
     "test": "echo \"Error: no test specified\" && exit 1"
