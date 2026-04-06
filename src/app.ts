@@ -34,7 +34,7 @@ app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 // ==================== ROUTES ====================
 app.use("/api/auth", authRoutes);
 app.use("/api/token", tokenRoutes);
-// app.use("/api/users", userRoutes);
+app.use("/api/users", userRoutes);
 app.use("/api/posts", postRoutes);
 app.use("/api/likes", likeRoutes);
 app.use("/api/comments", commentRoutes);
