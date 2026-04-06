@@ -20,7 +20,9 @@ const app: Application = express();
 // ==================== MIDDLEWARE ====================
 app.use(
   cors({
-    origin: (envVars.CLIENT_URL || "http://localhost:5173").trim(),
+    origin: (
+      envVars.CLIENT_URL || "https://buddy-script-app.netlify.app"
+    ).trim(),
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
     allowedHeaders: ["Content-Type", "Authorization"],
