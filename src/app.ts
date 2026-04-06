@@ -16,13 +16,27 @@ import { replyRoutes } from "./modules/reply/reply.route";
 dotenv.config();
 
 const app: Application = express();
+const allowedOrigins = new Set(
+  [
+    envVars.CLIENT_URL,
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "https://buddy-script-app.netlify.app",
+  ]
+    .filter(Boolean)
+    .map((origin) => origin.trim()),
+);
 
 // ==================== MIDDLEWARE ====================
 app.use(
   cors({
-    origin: (
-      envVars.CLIENT_URL || "https://buddy-script-app.netlify.app"
-    ).trim(),
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.has(origin)) {
+        return callback(null, true);
+      }
+
+      return callback(new Error(`CORS blocked for origin: ${origin}`));
+    },
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
     allowedHeaders: ["Content-Type", "Authorization"],
