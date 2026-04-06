@@ -2,10 +2,19 @@ import { Request, Response } from "express";
 import { replyService } from "./reply.service";
 import { envVars } from "../../config/env";
 
+const getSingleValue = (
+  value: string | string[] | undefined,
+): string | undefined => {
+  if (Array.isArray(value)) {
+    return value[0];
+  }
+  return value;
+};
+
 const createReply = async (req: Request, res: Response) => {
   try {
     const userId = (req as any).user?.userId;
-    const { commentId } = req.params;
+    const commentId = getSingleValue(req.params.commentId);
 
     if (!userId) {
       return res.status(401).json({
@@ -64,7 +73,7 @@ const createReply = async (req: Request, res: Response) => {
 
 const getRepliesByCommentId = async (req: Request, res: Response) => {
   try {
-    const { commentId } = req.params;
+    const commentId = getSingleValue(req.params.commentId);
 
     if (!commentId) {
       return res.status(400).json({
@@ -98,7 +107,7 @@ const getRepliesByCommentId = async (req: Request, res: Response) => {
 const updateReply = async (req: Request, res: Response) => {
   try {
     const userId = (req as any).user?.userId;
-    const { replyId } = req.params;
+    const replyId = getSingleValue(req.params.replyId);
 
     if (!userId) {
       return res.status(401).json({
@@ -156,7 +165,7 @@ const updateReply = async (req: Request, res: Response) => {
 const deleteReply = async (req: Request, res: Response) => {
   try {
     const userId = (req as any).user?.userId;
-    const { replyId } = req.params;
+    const replyId = getSingleValue(req.params.replyId);
 
     if (!userId) {
       return res.status(401).json({

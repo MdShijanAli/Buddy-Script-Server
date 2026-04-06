@@ -1,4 +1,7 @@
-import { PostCreateInput } from "../../../generated/prisma/models";
+import {
+  PostCreateInput,
+  PostUpdateInput,
+} from "../../../generated/prisma/models";
 import { prisma } from "../../lib/prisma";
 
 const getTotalDiscussionCount = (post: {
@@ -18,7 +21,7 @@ const createPost = async (postPayload: PostCreateInput) => {
 
 const updatePost = async (
   postId: string,
-  postPayload: PostCreateInput,
+  postPayload: PostUpdateInput,
   userId: string,
 ) => {
   const post = await prisma.post.findUnique({

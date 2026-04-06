@@ -1,10 +1,19 @@
 import { Request, Response } from "express";
 import { likeService } from "./like.service";
 
+const getSingleValue = (
+  value: string | string[] | undefined,
+): string | undefined => {
+  if (Array.isArray(value)) {
+    return value[0];
+  }
+  return value;
+};
+
 const createPostLike = async (req: Request, res: Response) => {
   try {
     const userId = (req as any).user?.userId;
-    const postId = req.params.postId;
+    const postId = getSingleValue(req.params.postId);
     if (!userId) {
       return res.status(401).json({
         success: false,
@@ -56,8 +65,10 @@ const createPostLike = async (req: Request, res: Response) => {
 const createCommentLike = async (req: Request, res: Response) => {
   try {
     const userId = (req as any).user?.userId;
-    const commentId = req.params.commentId;
-    const { postId } = req.query;
+    const commentId = getSingleValue(req.params.commentId);
+    const postId = getSingleValue(
+      req.query.postId as string | string[] | undefined,
+    );
     if (!userId) {
       return res.status(401).json({
         success: false,
@@ -75,7 +86,7 @@ const createCommentLike = async (req: Request, res: Response) => {
     const like = await likeService.createCommentLike({
       user: { connect: { id: userId } },
       comment: { connect: { id: commentId } },
-      post: postId ? { connect: { id: String(postId) } } : undefined,
+      post: postId ? { connect: { id: postId } } : undefined,
     });
     res.json({
       success: true,
@@ -106,7 +117,7 @@ const createCommentLike = async (req: Request, res: Response) => {
 const createReplyLike = async (req: Request, res: Response) => {
   try {
     const userId = (req as any).user?.userId;
-    const replyId = req.params.replyId;
+    const replyId = getSingleValue(req.params.replyId);
     if (!userId) {
       return res.status(401).json({
         success: false,
@@ -153,7 +164,7 @@ const createReplyLike = async (req: Request, res: Response) => {
 
 const unLike = async (req: Request, res: Response) => {
   try {
-    const likeId = req.params.likeId;
+    const likeId = getSingleValue(req.params.likeId);
     const userId = (req as any).user?.userId;
     if (!userId) {
       return res.status(401).json({
@@ -197,7 +208,7 @@ const unLike = async (req: Request, res: Response) => {
 
 const getLikesByPostId = async (req: Request, res: Response) => {
   try {
-    const postId = req.params.postId;
+    const postId = getSingleValue(req.params.postId);
     const userId = (req as any).user?.userId;
     if (!userId) {
       return res.status(401).json({
@@ -235,7 +246,7 @@ const getLikesByPostId = async (req: Request, res: Response) => {
 
 const getLikesByCommentId = async (req: Request, res: Response) => {
   try {
-    const commentId = req.params.commentId;
+    const commentId = getSingleValue(req.params.commentId);
     const userId = (req as any).user?.userId;
     if (!userId) {
       return res.status(401).json({
@@ -273,7 +284,7 @@ const getLikesByCommentId = async (req: Request, res: Response) => {
 
 const getLikesByReplyId = async (req: Request, res: Response) => {
   try {
-    const replyId = req.params.replyId;
+    const replyId = getSingleValue(req.params.replyId);
     const userId = (req as any).user?.userId;
     if (!userId) {
       return res.status(401).json({

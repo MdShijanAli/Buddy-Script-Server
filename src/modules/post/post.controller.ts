@@ -2,6 +2,15 @@ import { Request, Response } from "express";
 import { postService } from "./post.service";
 import { envVars } from "../../config/env";
 
+const getSingleValue = (
+  value: string | string[] | undefined,
+): string | undefined => {
+  if (Array.isArray(value)) {
+    return value[0];
+  }
+  return value;
+};
+
 const createPost = async (req: Request, res: Response) => {
   try {
     const userId = (req as any).user?.userId;
@@ -56,12 +65,19 @@ const createPost = async (req: Request, res: Response) => {
 const updatePost = async (req: Request, res: Response) => {
   try {
     const userId = (req as any).user?.userId;
-    const { postId } = req.params;
+    const postId = getSingleValue(req.params.postId);
     if (!userId) {
       return res.status(401).json({
         success: false,
         message: "Authentication required",
         code: "AUTH_REQUIRED",
+      });
+    }
+    if (!postId) {
+      return res.status(400).json({
+        success: false,
+        message: "Post ID is required",
+        code: "POST_ID_REQUIRED",
       });
     }
     const uploadedFiles = (
@@ -178,7 +194,16 @@ const getMyPosts = async (req: Request, res: Response) => {
 const deletePost = async (req: Request, res: Response) => {
   try {
     const userId = (req as any).user?.userId;
-    const { postId } = req.params;
+    const postId = getSingleValue(req.params.postId);
+
+    if (!postId) {
+      return res.status(400).json({
+        success: false,
+        message: "Post ID is required",
+        code: "POST_ID_REQUIRED",
+      });
+    }
+
     const result = await postService.deletePost(postId, userId);
     res.json({
       success: true,

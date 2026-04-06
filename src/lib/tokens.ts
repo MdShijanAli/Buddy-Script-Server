@@ -4,8 +4,10 @@ import { envVars } from "../config/env";
 
 const ACCESS_TOKEN_SECRET = envVars.ACCESS_TOKEN_SECRET as string;
 const REFRESH_TOKEN_SECRET = envVars.REFRESH_TOKEN_SECRET as string;
-const ACCESS_TOKEN_EXPIRY = envVars.ACCESS_TOKEN_EXPIRY || "6h";
-const REFRESH_TOKEN_EXPIRY = envVars.REFRESH_TOKEN_EXPIRY || "7d";
+const ACCESS_TOKEN_EXPIRY = (envVars.ACCESS_TOKEN_EXPIRY ||
+  "6h") as jwt.SignOptions["expiresIn"];
+const REFRESH_TOKEN_EXPIRY = (envVars.REFRESH_TOKEN_EXPIRY ||
+  "7d") as jwt.SignOptions["expiresIn"];
 
 // Validate secrets exist
 if (!ACCESS_TOKEN_SECRET) {
