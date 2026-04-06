@@ -1,0 +1,8 @@
+Vercel CLI 49.1.1
+Fetching deployment "buddy-script-server-2e2uf5qed-md-shijan-alis-projects.vercel.app" in md-shijan-alis-projects
+Displaying runtime logs for deployment buddy-script-server-2e2uf5qed-md-shijan-alis-projects.vercel.app (dpl_F6h9e4xkDBK6MKEYYCHdsfu6Tqqv) starting from Apr Mo 21:46:35.72
+
+waiting for new logs...
+WARN! Command automatically interrupted after 5 minutes.
+
+Error: An unexpected error occurred in logs: AbortError: The user aborted a request.
