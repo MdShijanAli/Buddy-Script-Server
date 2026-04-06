@@ -22,6 +22,7 @@ export const auth = betterAuth({
 
   trustedOrigins: [
     "https://buddy-script-app.netlify.app",
+    "http://localhost:5173",
     (envVars.CLIENT_URL || "").trim(),
   ].filter(Boolean),
 
