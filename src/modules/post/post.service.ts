@@ -94,7 +94,10 @@ const updatePost = async (
 
 const getPosts = async (userId: string, pagination: PaginationInput) => {
   const { skip, take, page, limit } = normalizePagination(pagination);
-  const where = { visibility: "PUBLIC" as const };
+  // Every public post, plus the requesting user's own private posts.
+  const where = {
+    OR: [{ visibility: "PUBLIC" as const }, { authorId: userId }],
+  };
 
   const [posts, total] = await prisma.$transaction([
     prisma.post.findMany({
