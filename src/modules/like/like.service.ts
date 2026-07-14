@@ -1,214 +1,272 @@
-import { LikeCreateInput } from "../../../generated/prisma/models";
 import { prisma } from "../../lib/prisma";
+import { Prisma } from "../../../generated/prisma/client";
 
-const createPostLike = async (payload: LikeCreateInput) => {
-  const userId = payload.user.connect.id;
-  const postId = payload.post?.connect?.id;
+export type LikeTargetType = "post" | "comment" | "reply";
 
-  const existingLike = await prisma.like.findFirst({
-    where: { userId, postId },
-  });
-  if (existingLike) {
-    throw new Error("You have already liked this post");
-  }
+type TxClient = Prisma.TransactionClient;
 
-  const result = await prisma.like.create({ data: payload });
+const PAGE_SIZE_DEFAULT = 20;
+const PAGE_SIZE_MAX = 50;
 
-  const updatedPost = await prisma.post.update({
-    where: { id: postId },
-    data: { likesCount: { increment: 1 } },
-    select: {
-      id: true,
-      content: true,
-      visibility: true,
-      likesCount: true,
-      author: {
-        select: {
-          id: true,
-          name: true,
-        },
-      },
-    },
-  });
+interface PaginationInput {
+  page?: number;
+  limit?: number;
+}
 
+const likerSelect = {
+  id: true,
+  name: true,
+  first_name: true,
+  last_name: true,
+  profile_image: true,
+} as const;
+
+const normalizePagination = ({ page, limit }: PaginationInput) => {
+  const safePage = Number.isInteger(page) && page! > 0 ? page! : 1;
+  const safeLimit =
+    Number.isInteger(limit) && limit! > 0
+      ? Math.min(limit!, PAGE_SIZE_MAX)
+      : PAGE_SIZE_DEFAULT;
   return {
-    id: result.id,
-    createdAt: result.createdAt,
-    post: updatedPost,
+    skip: (safePage - 1) * safeLimit,
+    take: safeLimit,
+    page: safePage,
+    limit: safeLimit,
   };
 };
 
-const createCommentLike = async (payload: LikeCreateInput) => {
-  const userId = payload.user.connect.id;
-  const commentId = payload.comment?.connect?.id;
-  const postId = payload.post?.connect?.id;
+const isUniqueConstraintError = (error: unknown) =>
+  error instanceof Prisma.PrismaClientKnownRequestError &&
+  error.code === "P2002";
 
-  const existingLike = await prisma.like.findFirst({
-    where: { userId, commentId, postId },
-  });
-  if (existingLike) {
-    throw new Error("You have already liked this comment");
+const findExistingLike = (
+  tx: TxClient,
+  userId: string,
+  targetType: LikeTargetType,
+  targetId: string,
+) => {
+  switch (targetType) {
+    case "post":
+      return tx.like.findUnique({
+        where: { userId_postId: { userId, postId: targetId } },
+        select: { id: true },
+      });
+    case "comment":
+      return tx.like.findUnique({
+        where: { userId_commentId: { userId, commentId: targetId } },
+        select: { id: true },
+      });
+    case "reply":
+      return tx.like.findUnique({
+        where: { userId_replyId: { userId, replyId: targetId } },
+        select: { id: true },
+      });
   }
+};
 
-  const result = await prisma.like.create({ data: payload });
+const buildLikeData = (
+  userId: string,
+  targetType: LikeTargetType,
+  targetId: string,
+): Prisma.LikeCreateInput => {
+  const base = { user: { connect: { id: userId } } };
+  switch (targetType) {
+    case "post":
+      return { ...base, post: { connect: { id: targetId } } };
+    case "comment":
+      return { ...base, comment: { connect: { id: targetId } } };
+    case "reply":
+      return { ...base, reply: { connect: { id: targetId } } };
+  }
+};
 
-  const updatedComment = await prisma.comment.update({
-    where: { id: commentId },
-    data: { likesCount: { increment: 1 } },
-    select: {
-      id: true,
-      content: true,
-      likesCount: true,
-      author: {
-        select: {
-          id: true,
-          name: true,
-        },
-      },
-    },
+const targetExists = async (
+  tx: TxClient,
+  targetType: LikeTargetType,
+  targetId: string,
+) => {
+  switch (targetType) {
+    case "post":
+      return Boolean(
+        await tx.post.findUnique({
+          where: { id: targetId },
+          select: { id: true },
+        }),
+      );
+    case "comment":
+      return Boolean(
+        await tx.comment.findUnique({
+          where: { id: targetId },
+          select: { id: true },
+        }),
+      );
+    case "reply":
+      return Boolean(
+        await tx.reply.findUnique({
+          where: { id: targetId },
+          select: { id: true },
+        }),
+      );
+  }
+};
+
+const adjustLikesCount = async (
+  tx: TxClient,
+  targetType: LikeTargetType,
+  targetId: string,
+  delta: 1 | -1,
+) => {
+  const data = { likesCount: { increment: delta } };
+  switch (targetType) {
+    case "post": {
+      const post = await tx.post.update({
+        where: { id: targetId },
+        data,
+        select: { likesCount: true },
+      });
+      return post.likesCount;
+    }
+    case "comment": {
+      const comment = await tx.comment.update({
+        where: { id: targetId },
+        data,
+        select: { likesCount: true },
+      });
+      return comment.likesCount;
+    }
+    case "reply": {
+      const reply = await tx.reply.update({
+        where: { id: targetId },
+        data,
+        select: { likesCount: true },
+      });
+      return reply.likesCount;
+    }
+  }
+};
+
+const getCurrentLikesCount = async (
+  tx: TxClient,
+  targetType: LikeTargetType,
+  targetId: string,
+) => {
+  switch (targetType) {
+    case "post": {
+      const post = await tx.post.findUniqueOrThrow({
+        where: { id: targetId },
+        select: { likesCount: true },
+      });
+      return post.likesCount;
+    }
+    case "comment": {
+      const comment = await tx.comment.findUniqueOrThrow({
+        where: { id: targetId },
+        select: { likesCount: true },
+      });
+      return comment.likesCount;
+    }
+    case "reply": {
+      const reply = await tx.reply.findUniqueOrThrow({
+        where: { id: targetId },
+        select: { likesCount: true },
+      });
+      return reply.likesCount;
+    }
+  }
+};
+
+const targetWhere = (targetType: LikeTargetType, targetId: string) => {
+  switch (targetType) {
+    case "post":
+      return { postId: targetId };
+    case "comment":
+      return { commentId: targetId };
+    case "reply":
+      return { replyId: targetId };
+  }
+};
+
+/**
+ * Toggles a like for the given target: creates it if missing, removes it if
+ * present. Runs inside a transaction so the like row and the denormalized
+ * counter never drift apart, and falls back gracefully if a concurrent
+ * request already created/removed the same like (unique constraint race).
+ */
+const toggleLike = async (
+  userId: string,
+  targetType: LikeTargetType,
+  targetId: string,
+) => {
+  return prisma.$transaction(async (tx) => {
+    const existing = await findExistingLike(tx, userId, targetType, targetId);
+
+    if (existing) {
+      await tx.like.delete({ where: { id: existing.id } });
+      const likesCount = await adjustLikesCount(tx, targetType, targetId, -1);
+      return { liked: false, likesCount };
+    }
+
+    const exists = await targetExists(tx, targetType, targetId);
+    if (!exists) {
+      throw new Error(`${targetType} not found`);
+    }
+
+    try {
+      await tx.like.create({
+        data: buildLikeData(userId, targetType, targetId),
+      });
+    } catch (error) {
+      if (isUniqueConstraintError(error)) {
+        const likesCount = await getCurrentLikesCount(
+          tx,
+          targetType,
+          targetId,
+        );
+        return { liked: true, likesCount };
+      }
+      throw error;
+    }
+
+    const likesCount = await adjustLikesCount(tx, targetType, targetId, 1);
+    return { liked: true, likesCount };
   });
+};
+
+const getLikesByTarget = async (
+  targetType: LikeTargetType,
+  targetId: string,
+  pagination: PaginationInput,
+) => {
+  const { skip, take, page, limit } = normalizePagination(pagination);
+  const where = targetWhere(targetType, targetId);
+
+  const [likes, total] = await prisma.$transaction([
+    prisma.like.findMany({
+      where,
+      select: {
+        id: true,
+        createdAt: true,
+        user: { select: likerSelect },
+      },
+      orderBy: { createdAt: "desc" },
+      skip,
+      take,
+    }),
+    prisma.like.count({ where }),
+  ]);
 
   return {
-    id: result.id,
-    createdAt: result.createdAt,
-    comment: updatedComment,
+    likes,
+    pagination: {
+      page,
+      limit,
+      total,
+      totalPages: Math.max(Math.ceil(total / limit), 1),
+    },
   };
-};
-
-const createReplyLike = async (payload: LikeCreateInput) => {
-  const userId = payload.user.connect.id;
-  const replyId = payload.reply?.connect?.id;
-
-  const existingLike = await prisma.like.findFirst({
-    where: { userId, replyId },
-  });
-  if (existingLike) {
-    throw new Error("You have already liked this reply");
-  }
-
-  const result = await prisma.like.create({ data: payload });
-
-  const updatedReply = await prisma.reply.update({
-    where: { id: replyId },
-    data: { likesCount: { increment: 1 } },
-    select: {
-      id: true,
-      content: true,
-      likesCount: true,
-      author: {
-        select: {
-          id: true,
-          name: true,
-        },
-      },
-    },
-  });
-
-  return {
-    id: result.id,
-    createdAt: result.createdAt,
-    reply: updatedReply,
-  };
-};
-
-const unLike = async (likeId: string) => {
-  const like = await prisma.like.findUnique({ where: { id: likeId } });
-  if (!like) {
-    throw new Error("Like not found");
-  }
-
-  console.log("Unliking: ", like);
-
-  await prisma.like.delete({ where: { id: likeId } });
-
-  // Update likes count for the associated post
-  if (like.postId) {
-    await prisma.post.update({
-      where: { id: like.postId },
-      data: { likesCount: { decrement: 1 } },
-    });
-  }
-
-  // Update likes count for the associated comment
-  if (like.commentId) {
-    await prisma.comment.update({
-      where: { id: like.commentId },
-      data: { likesCount: { decrement: 1 } },
-    });
-  }
-
-  // Update likes count for the associated reply
-  if (like.replyId) {
-    await prisma.reply.update({
-      where: { id: like.replyId },
-      data: { likesCount: { decrement: 1 } },
-    });
-  }
-};
-
-const getLikesByPostId = async (postId: string) => {
-  const likes = await prisma.like.findMany({
-    where: { postId },
-    include: {
-      user: {
-        select: {
-          id: true,
-          name: true,
-          first_name: true,
-          last_name: true,
-          profile_image: true,
-        },
-      },
-    },
-  });
-
-  return likes;
-};
-
-const getLikesByCommentId = async (commentId: string) => {
-  const likes = await prisma.like.findMany({
-    where: { commentId },
-    include: {
-      user: {
-        select: {
-          id: true,
-          name: true,
-          first_name: true,
-          last_name: true,
-          profile_image: true,
-        },
-      },
-    },
-  });
-
-  return likes;
-};
-
-const getLikesByReplyId = async (replyId: string) => {
-  const likes = await prisma.like.findMany({
-    where: { replyId },
-    include: {
-      user: {
-        select: {
-          id: true,
-          name: true,
-          first_name: true,
-          last_name: true,
-          profile_image: true,
-        },
-      },
-    },
-  });
-
-  return likes;
 };
 
 export const likeService = {
-  createPostLike,
-  createCommentLike,
-  createReplyLike,
-  unLike,
-  getLikesByPostId,
-  getLikesByCommentId,
-  getLikesByReplyId,
+  toggleLike,
+  getLikesByTarget,
 };

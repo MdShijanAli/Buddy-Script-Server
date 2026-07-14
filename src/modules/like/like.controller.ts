@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { likeService } from "./like.service";
+import { likeService, LikeTargetType } from "./like.service";
 
 const getSingleValue = (
   value: string | string[] | undefined,
@@ -10,322 +10,128 @@ const getSingleValue = (
   return value;
 };
 
-const createPostLike = async (req: Request, res: Response) => {
-  try {
-    const userId = (req as any).user?.userId;
-    const postId = getSingleValue(req.params.postId);
-    if (!userId) {
-      return res.status(401).json({
-        success: false,
-        message: "Authentication required",
-        code: "AUTH_REQUIRED",
+const TARGET_LABEL: Record<LikeTargetType, string> = {
+  post: "Post",
+  comment: "Comment",
+  reply: "Reply",
+};
+
+const toggleLikeHandler =
+  (targetType: LikeTargetType, paramName: string) =>
+  async (req: Request, res: Response) => {
+    try {
+      const userId = (req as any).user?.userId;
+      const targetId = getSingleValue(
+        (req.params as Record<string, string | string[] | undefined>)[
+          paramName
+        ],
+      );
+      const label = TARGET_LABEL[targetType];
+
+      if (!userId) {
+        return res.status(401).json({
+          success: false,
+          message: "Authentication required",
+          code: "AUTH_REQUIRED",
+        });
+      }
+      if (!targetId) {
+        return res.status(400).json({
+          success: false,
+          message: `${label} ID is required`,
+          code: `${targetType.toUpperCase()}_ID_REQUIRED`,
+        });
+      }
+
+      const result = await likeService.toggleLike(
+        userId,
+        targetType,
+        targetId,
+      );
+
+      res.json({
+        success: true,
+        message: `${label} ${result.liked ? "liked" : "unliked"} successfully`,
+        liked: result.liked,
+        likesCount: result.likesCount,
       });
-    }
-    if (!postId) {
-      return res.status(400).json({
+    } catch (error: any) {
+      console.error(`Toggle ${targetType} Like Error: `, error);
+      if (error.message === `${targetType} not found`) {
+        return res.status(404).json({
+          success: false,
+          message: `${TARGET_LABEL[targetType]} not found`,
+          code: `${targetType.toUpperCase()}_NOT_FOUND`,
+        });
+      }
+      res.status(500).json({
         success: false,
-        message: "Post ID is required",
-        code: "POST_ID_REQUIRED",
-      });
-    }
-    const like = await likeService.createPostLike({
-      user: { connect: { id: userId } },
-      post: { connect: { id: postId } },
-    });
-    res.json({
-      success: true,
-      message: "Post liked successfully",
-      like,
-    });
-  } catch (error: any) {
-    console.error("Create Like Error: ", error);
-    if (error.message?.includes("already liked")) {
-      return res.status(400).json({
-        success: false,
-        message: error.message,
-        code: "ALREADY_LIKED",
+        message: `Failed to toggle like on ${targetType}`,
+        code: "TOGGLE_LIKE_ERROR",
         error: {
           message:
             error.message?.split("\n").pop().trim() || error.message || error,
         },
       });
     }
-    res.status(500).json({
-      success: false,
-      message: "Failed to like post",
-      code: "CREATE_LIKE_ERROR",
-      error: {
-        message:
-          error.message?.split("\n").pop().trim() || error.message || error,
-      },
-    });
-  }
-};
+  };
 
-const createCommentLike = async (req: Request, res: Response) => {
-  try {
-    const userId = (req as any).user?.userId;
-    const commentId = getSingleValue(req.params.commentId);
-    const postId = getSingleValue(
-      req.query.postId as string | string[] | undefined,
-    );
-    if (!userId) {
-      return res.status(401).json({
-        success: false,
-        message: "Authentication required",
-        code: "AUTH_REQUIRED",
-      });
-    }
-    if (!commentId) {
-      return res.status(400).json({
-        success: false,
-        message: "Comment ID is required",
-        code: "COMMENT_ID_REQUIRED",
-      });
-    }
-    const like = await likeService.createCommentLike({
-      user: { connect: { id: userId } },
-      comment: { connect: { id: commentId } },
-      post: postId ? { connect: { id: postId } } : undefined,
-    });
-    res.json({
-      success: true,
-      message: "Comment liked successfully",
-      like,
-    });
-  } catch (error: any) {
-    console.error("Create Comment Like Error: ", error);
-    if (error.message?.includes("already liked")) {
-      return res.status(400).json({
-        success: false,
-        message: error.message,
-        code: "ALREADY_LIKED",
-      });
-    }
-    res.status(500).json({
-      success: false,
-      message: "Failed to like comment",
-      code: "CREATE_COMMENT_LIKE_ERROR",
-      error: {
-        message:
-          error.message?.split("\n").pop().trim() || error.message || error,
-      },
-    });
-  }
-};
+const getLikesHandler =
+  (targetType: LikeTargetType, paramName: string) =>
+  async (req: Request, res: Response) => {
+    try {
+      const targetId = getSingleValue(
+        (req.params as Record<string, string | string[] | undefined>)[
+          paramName
+        ],
+      );
+      const label = TARGET_LABEL[targetType];
 
-const createReplyLike = async (req: Request, res: Response) => {
-  try {
-    const userId = (req as any).user?.userId;
-    const replyId = getSingleValue(req.params.replyId);
-    if (!userId) {
-      return res.status(401).json({
-        success: false,
-        message: "Authentication required",
-        code: "AUTH_REQUIRED",
-      });
-    }
-    if (!replyId) {
-      return res.status(400).json({
-        success: false,
-        message: "Reply ID is required",
-        code: "REPLY_ID_REQUIRED",
-      });
-    }
-    const like = await likeService.createReplyLike({
-      user: { connect: { id: userId } },
-      reply: { connect: { id: replyId } },
-    });
-    res.json({
-      success: true,
-      message: "Reply liked successfully",
-      like,
-    });
-  } catch (error: any) {
-    console.error("Create Reply Like Error: ", error);
-    if (error.message?.includes("already liked")) {
-      return res.status(400).json({
-        success: false,
-        message: error.message,
-        code: "ALREADY_LIKED",
-      });
-    }
-    res.status(500).json({
-      success: false,
-      message: "Failed to like reply",
-      code: "CREATE_REPLY_LIKE_ERROR",
-      error: {
-        message:
-          error.message?.split("\n").pop().trim() || error.message || error,
-      },
-    });
-  }
-};
+      if (!targetId) {
+        return res.status(400).json({
+          success: false,
+          message: `${label} ID is required`,
+          code: `${targetType.toUpperCase()}_ID_REQUIRED`,
+        });
+      }
 
-const unLike = async (req: Request, res: Response) => {
-  try {
-    const likeId = getSingleValue(req.params.likeId);
-    const userId = (req as any).user?.userId;
-    if (!userId) {
-      return res.status(401).json({
-        success: false,
-        message: "Authentication required",
-        code: "AUTH_REQUIRED",
-      });
-    }
-    if (!likeId) {
-      return res.status(400).json({
-        success: false,
-        message: "Like ID is required",
-        code: "LIKE_ID_REQUIRED",
-      });
-    }
-    await likeService.unLike(likeId);
-    res.json({
-      success: true,
-      message: "Like removed successfully",
-    });
-  } catch (error: any) {
-    console.error("Unlike Error: ", error);
-    if (error.message === "Like not found") {
-      return res.status(404).json({
-        success: false,
-        message: "Like not found",
-        code: "LIKE_NOT_FOUND",
-      });
-    }
-    res.status(500).json({
-      success: false,
-      message: "Failed to remove like",
-      code: "UNLIKE_ERROR",
-      error: {
-        message:
-          error.message?.split("\n").pop().trim() || error.message || error,
-      },
-    });
-  }
-};
+      const page = Number(req.query.page);
+      const limit = Number(req.query.limit);
 
-const getLikesByPostId = async (req: Request, res: Response) => {
-  try {
-    const postId = getSingleValue(req.params.postId);
-    const userId = (req as any).user?.userId;
-    if (!userId) {
-      return res.status(401).json({
-        success: false,
-        message: "Authentication required",
-        code: "AUTH_REQUIRED",
-      });
-    }
-    if (!postId) {
-      return res.status(400).json({
-        success: false,
-        message: "Post ID is required",
-        code: "POST_ID_REQUIRED",
-      });
-    }
-    const likes = await likeService.getLikesByPostId(postId);
-    res.json({
-      success: true,
-      message: "Likes retrieved successfully",
-      likes,
-    });
-  } catch (error: any) {
-    console.error("Get Likes Error: ", error);
-    res.status(500).json({
-      success: false,
-      message: "Failed to retrieve likes",
-      code: "GET_LIKES_ERROR",
-      error: {
-        message:
-          error.message?.split("\n").pop().trim() || error.message || error,
-      },
-    });
-  }
-};
+      const result = await likeService.getLikesByTarget(
+        targetType,
+        targetId,
+        {
+          page: Number.isFinite(page) ? page : undefined,
+          limit: Number.isFinite(limit) ? limit : undefined,
+        },
+      );
 
-const getLikesByCommentId = async (req: Request, res: Response) => {
-  try {
-    const commentId = getSingleValue(req.params.commentId);
-    const userId = (req as any).user?.userId;
-    if (!userId) {
-      return res.status(401).json({
+      res.json({
+        success: true,
+        message: "Likes retrieved successfully",
+        likes: result.likes,
+        pagination: result.pagination,
+      });
+    } catch (error: any) {
+      console.error(`Get ${targetType} Likes Error: `, error);
+      res.status(500).json({
         success: false,
-        message: "Authentication required",
-        code: "AUTH_REQUIRED",
+        message: "Failed to retrieve likes",
+        code: "GET_LIKES_ERROR",
+        error: {
+          message:
+            error.message?.split("\n").pop().trim() || error.message || error,
+        },
       });
     }
-    if (!commentId) {
-      return res.status(400).json({
-        success: false,
-        message: "Comment ID is required",
-        code: "COMMENT_ID_REQUIRED",
-      });
-    }
-    const likes = await likeService.getLikesByCommentId(commentId);
-    res.json({
-      success: true,
-      message: "Likes retrieved successfully",
-      likes,
-    });
-  } catch (error: any) {
-    console.error("Get Comment Likes Error: ", error);
-    res.status(500).json({
-      success: false,
-      message: "Failed to retrieve likes",
-      code: "GET_COMMENT_LIKES_ERROR",
-      error: {
-        message:
-          error.message?.split("\n").pop().trim() || error.message || error,
-      },
-    });
-  }
-};
-
-const getLikesByReplyId = async (req: Request, res: Response) => {
-  try {
-    const replyId = getSingleValue(req.params.replyId);
-    const userId = (req as any).user?.userId;
-    if (!userId) {
-      return res.status(401).json({
-        success: false,
-        message: "Authentication required",
-        code: "AUTH_REQUIRED",
-      });
-    }
-    if (!replyId) {
-      return res.status(400).json({
-        success: false,
-        message: "Reply ID is required",
-        code: "REPLY_ID_REQUIRED",
-      });
-    }
-    const likes = await likeService.getLikesByReplyId(replyId);
-    res.json({
-      success: true,
-      message: "Likes retrieved successfully",
-      likes,
-    });
-  } catch (error: any) {
-    console.error("Get Reply Likes Error: ", error);
-    res.status(500).json({
-      success: false,
-      message: "Failed to retrieve likes",
-      code: "GET_REPLY_LIKES_ERROR",
-      error: {
-        message:
-          error.message?.split("\n").pop().trim() || error.message || error,
-      },
-    });
-  }
-};
+  };
 
 export const likeController = {
-  createPostLike,
-  createCommentLike,
-  createReplyLike,
-  unLike,
-  getLikesByPostId,
-  getLikesByCommentId,
-  getLikesByReplyId,
+  togglePostLike: toggleLikeHandler("post", "postId"),
+  toggleCommentLike: toggleLikeHandler("comment", "commentId"),
+  toggleReplyLike: toggleLikeHandler("reply", "replyId"),
+  getPostLikes: getLikesHandler("post", "postId"),
+  getCommentLikes: getLikesHandler("comment", "commentId"),
+  getReplyLikes: getLikesHandler("reply", "replyId"),
 };

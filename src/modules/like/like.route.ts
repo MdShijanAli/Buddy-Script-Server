@@ -4,47 +4,40 @@ import { authMiddleware, UserRole } from "../../middlewares/auth";
 
 const router = Router();
 
-// Post likes
+// Post likes (POST toggles like/unlike)
 router.post(
   "/post/:postId",
   authMiddleware(UserRole.ADMIN, UserRole.USER),
-  likeController.createPostLike,
+  likeController.togglePostLike,
 );
 router.get(
   "/post/:postId",
   authMiddleware(UserRole.ADMIN, UserRole.USER),
-  likeController.getLikesByPostId,
+  likeController.getPostLikes,
 );
 
-// Comment likes
+// Comment likes (POST toggles like/unlike)
 router.post(
   "/comment/:commentId",
   authMiddleware(UserRole.ADMIN, UserRole.USER),
-  likeController.createCommentLike,
+  likeController.toggleCommentLike,
 );
 router.get(
   "/comment/:commentId",
   authMiddleware(UserRole.ADMIN, UserRole.USER),
-  likeController.getLikesByCommentId,
+  likeController.getCommentLikes,
 );
 
-// Reply likes
+// Reply likes (POST toggles like/unlike)
 router.post(
   "/reply/:replyId",
   authMiddleware(UserRole.ADMIN, UserRole.USER),
-  likeController.createReplyLike,
+  likeController.toggleReplyLike,
 );
 router.get(
   "/reply/:replyId",
   authMiddleware(UserRole.ADMIN, UserRole.USER),
-  likeController.getLikesByReplyId,
-);
-
-// Unlike (works for all types)
-router.delete(
-  "/:likeId",
-  authMiddleware(UserRole.ADMIN, UserRole.USER),
-  likeController.unLike,
+  likeController.getReplyLikes,
 );
 
 export const likeRoutes = router;
