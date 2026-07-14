@@ -141,11 +141,17 @@ const getPosts = async (req: Request, res: Response) => {
         code: "AUTH_REQUIRED",
       });
     }
-    const posts = await postService.getPosts();
+    const page = Number(req.query.page);
+    const limit = Number(req.query.limit);
+    const result = await postService.getPosts(userId, {
+      page: Number.isFinite(page) ? page : undefined,
+      limit: Number.isFinite(limit) ? limit : undefined,
+    });
     res.json({
       success: true,
       message: "Posts retrieved successfully",
-      posts,
+      posts: result.posts,
+      pagination: result.pagination,
     });
   } catch (error: any) {
     console.error("Get Posts Error: ", error);
@@ -171,11 +177,17 @@ const getMyPosts = async (req: Request, res: Response) => {
         code: "AUTH_REQUIRED",
       });
     }
-    const posts = await postService.getMyPosts(userId);
+    const page = Number(req.query.page);
+    const limit = Number(req.query.limit);
+    const result = await postService.getMyPosts(userId, {
+      page: Number.isFinite(page) ? page : undefined,
+      limit: Number.isFinite(limit) ? limit : undefined,
+    });
     res.json({
       success: true,
       message: "My posts retrieved successfully",
-      posts,
+      posts: result.posts,
+      pagination: result.pagination,
     });
   } catch (error: any) {
     console.error("Get My Posts Error: ", error);

@@ -13,9 +13,8 @@ model Like {
     @@unique([userId, postId], map: "unique_user_post_like")
     @@unique([userId, commentId], map: "unique_user_comment_like")
     @@unique([userId, replyId], map: "unique_user_reply_like")
-    @@index([userId])
-    @@index([postId])
-    @@index([commentId])
-    @@index([replyId])
+    @@index([postId, createdAt])
+    @@index([commentId, createdAt])
+    @@index([replyId, createdAt])
     @@map("like")
 }

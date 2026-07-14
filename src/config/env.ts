@@ -38,9 +38,7 @@ const loadEnvVariables = (): EnvConfig => {
     CLIENT_URL:
       process.env.CLIENT_URL || "https://buddy-script-app.netlify.app",
     BETTER_AUTH_SECRET: process.env.BETTER_AUTH_SECRET || "",
-    BETTER_AUTH_URL:
-      process.env.BETTER_AUTH_URL ||
-      "https://buddy-script-server-oerv.onrender.com",
+    BETTER_AUTH_URL: process.env.BETTER_AUTH_URL || "http://localhost:5050",
     ACCESS_TOKEN_SECRET: process.env.ACCESS_TOKEN_SECRET || "",
     REFRESH_TOKEN_SECRET: process.env.REFRESH_TOKEN_SECRET || "",
     ACCESS_TOKEN_EXPIRY: process.env.ACCESS_TOKEN_EXPIRY || "6h",

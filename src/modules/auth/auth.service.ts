@@ -17,7 +17,6 @@ interface RegisterPayload {
 }
 
 const login = async (payload: LoginPayload) => {
-  console.log("Login Payload: ", payload);
   const result = await auth.api.signInEmail({
     body: payload,
   });
@@ -43,7 +42,6 @@ const register = async (payload: RegisterPayload) => {
   const result = await auth.api.signUpEmail({
     body: authBody,
   });
-  console.log("Register Result: ", result);
   return result;
 };
 

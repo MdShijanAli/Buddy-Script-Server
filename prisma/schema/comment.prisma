@@ -13,7 +13,7 @@ model Comment {
     likes   Like[]
     replies Reply[]
 
-    @@index([postId])
+    @@index([postId, createdAt])
     @@index([authorId])
     @@map("comment")
 }

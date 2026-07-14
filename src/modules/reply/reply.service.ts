@@ -47,7 +47,6 @@ const createReply = async (payload: CreateReplyInput) => {
 
     return reply;
   });
-  console.log("Reply Created: ", result);
   return result;
 };
 
@@ -107,7 +106,6 @@ const updateReply = async (
     },
   });
 
-  console.log("Reply Updated: ", result);
   return result;
 };
 
@@ -148,7 +146,6 @@ const deleteReply = async (replyId: string, userId: string) => {
     return deletedReply;
   });
 
-  console.log("Reply Deleted: ", result);
   return result;
 };
 

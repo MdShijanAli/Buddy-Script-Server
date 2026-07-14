@@ -54,8 +54,6 @@ export function betterAuthMiddleware(
         role: data.user.role || "USER",
       });
 
-      console.log("Generate Tokens: ", tokens);
-
       return originalJson({
         ...data,
         tokens,
@@ -74,12 +72,14 @@ export function betterAuthErrorHandler(
   res: Response,
   next: NextFunction,
 ) {
+  const { password, ...safeBody } = req.body || {};
+  void password;
   console.error("Better Auth Error:", {
     message: error.message,
     code: error.code,
     stack: error.stack,
     path: req.path,
-    body: req.body,
+    body: safeBody,
   });
 
   // Handle validation errors

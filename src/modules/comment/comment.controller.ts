@@ -82,12 +82,18 @@ const getCommentsByPostId = async (req: Request, res: Response) => {
       });
     }
 
-    const comments = await commentService.getCommentsByPostId(postId);
+    const page = Number(req.query.page);
+    const limit = Number(req.query.limit);
+    const result = await commentService.getCommentsByPostId(postId, {
+      page: Number.isFinite(page) ? page : undefined,
+      limit: Number.isFinite(limit) ? limit : undefined,
+    });
 
     res.json({
       success: true,
       message: "Comments retrieved successfully",
-      comments,
+      comments: result.comments,
+      pagination: result.pagination,
     });
   } catch (error: any) {
     console.error("Get Comments Error: ", error);

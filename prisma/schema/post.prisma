@@ -15,8 +15,7 @@ model Post {
     likes    Like[]
     comments Comment[]
 
-    @@index([authorId])
-    @@index([visibility])
-    @@index([createdAt])
+    @@index([authorId, createdAt])
+    @@index([visibility, createdAt])
     @@map("post")
 }
