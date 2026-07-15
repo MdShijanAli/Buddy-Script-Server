@@ -33,7 +33,7 @@ const createPost = async (req: Request, res: Response) => {
       uploadedFiles?.imageUrl?.[0] ||
       uploadedFiles?.file?.[0];
     const imageUrl = uploadedFile
-      ? `${envVars.BETTER_AUTH_URL}/uploads/posts/${uploadedFile.filename}`
+      ? `${envVars.API_URL}/uploads/posts/${uploadedFile.filename}`
       : undefined;
 
     const result = await postService.createPost({
@@ -97,7 +97,7 @@ const updatePost = async (req: Request, res: Response) => {
       req.body.removeImage === "1";
 
     const imageUrl = uploadedFile
-      ? `${envVars.BETTER_AUTH_URL}/uploads/posts/${uploadedFile.filename}`
+      ? `${envVars.API_URL}/uploads/posts/${uploadedFile.filename}`
       : removeImage
         ? null
         : undefined;

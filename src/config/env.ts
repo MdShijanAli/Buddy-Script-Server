@@ -6,9 +6,8 @@ interface EnvConfig {
   NODE_ENV: string;
   PORT: string;
   DATABASE_URL: string;
+  API_URL: string;
   CLIENT_URL: string;
-  BETTER_AUTH_SECRET: string;
-  BETTER_AUTH_URL: string;
   ACCESS_TOKEN_SECRET: string;
   REFRESH_TOKEN_SECRET: string;
   ACCESS_TOKEN_EXPIRY: string;
@@ -18,7 +17,7 @@ interface EnvConfig {
 const loadEnvVariables = (): EnvConfig => {
   const requiredEnvVars = [
     "DATABASE_URL",
-    "BETTER_AUTH_SECRET",
+    "API_URL",
     "ACCESS_TOKEN_SECRET",
     "REFRESH_TOKEN_SECRET",
   ];
@@ -34,11 +33,10 @@ const loadEnvVariables = (): EnvConfig => {
   return {
     NODE_ENV: process.env.NODE_ENV || "development",
     PORT: process.env.PORT || "5000",
+    API_URL: process.env.API_URL || "http://localhost:3000",
     DATABASE_URL: process.env.DATABASE_URL || "",
     CLIENT_URL:
       process.env.CLIENT_URL || "https://buddy-script-app.netlify.app",
-    BETTER_AUTH_SECRET: process.env.BETTER_AUTH_SECRET || "",
-    BETTER_AUTH_URL: process.env.BETTER_AUTH_URL || "http://localhost:5050",
     ACCESS_TOKEN_SECRET: process.env.ACCESS_TOKEN_SECRET || "",
     REFRESH_TOKEN_SECRET: process.env.REFRESH_TOKEN_SECRET || "",
     ACCESS_TOKEN_EXPIRY: process.env.ACCESS_TOKEN_EXPIRY || "6h",

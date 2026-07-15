@@ -14,7 +14,7 @@ export const auth = betterAuth({
     httpOnly: true,
   },
 
-  baseURL: (envVars.BETTER_AUTH_URL || "").trim(),
+  baseURL: (envVars.API_URL || "").trim(),
 
   database: prismaAdapter(prisma, {
     provider: "postgresql",

@@ -33,7 +33,7 @@ const createComment = async (req: Request, res: Response) => {
       uploadedFiles?.imageUrl?.[0] ||
       uploadedFiles?.file?.[0];
     const imageUrl = uploadedFile
-      ? `${envVars.BETTER_AUTH_URL}/uploads/posts/${uploadedFile.filename}`
+      ? `${envVars.API_URL}/uploads/posts/${uploadedFile.filename}`
       : undefined;
 
     if (!req.body.content && !imageUrl) {
@@ -140,7 +140,7 @@ const updateComment = async (req: Request, res: Response) => {
       uploadedFiles?.imageUrl?.[0] ||
       uploadedFiles?.file?.[0];
     const imageUrl = uploadedFile
-      ? `${envVars.BETTER_AUTH_URL}/uploads/posts/${uploadedFile.filename}`
+      ? `${envVars.API_URL}/uploads/posts/${uploadedFile.filename}`
       : undefined;
 
     if (!req.body.content && !imageUrl) {

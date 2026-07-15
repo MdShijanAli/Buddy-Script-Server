@@ -64,7 +64,7 @@ const updateMyProfile = async (req: Request, res: Response) => {
       req.body.removeProfileImage === "1";
 
     const profileImage = uploadedFile
-      ? `${envVars.BETTER_AUTH_URL}/uploads/profiles/${uploadedFile.filename}`
+      ? `${envVars.API_URL}/uploads/profiles/${uploadedFile.filename}`
       : removeProfileImage
         ? null
         : undefined;
