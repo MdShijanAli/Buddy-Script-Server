@@ -1,73 +1,69 @@
 import { Request, Response } from "express";
-import { authService } from "./auth.service";
+import { authService, AuthError } from "./auth.service";
 import { generateTokens } from "../../lib/tokens";
 
 const login = async (req: Request, res: Response) => {
   try {
-    const result = await authService.login(req.body);
-    if (!result.user.id) {
-      return res.status(401).json({
-        success: false,
-        message: "Invalid email or password",
-        code: "AUTH_FAILED",
-      });
-    }
+    const user = await authService.login(req.body);
     const tokens = generateTokens({
-      userId: result.user.id,
-      email: result.user.email,
-      role: result.user.role || "USER",
+      userId: user.id,
+      email: user.email,
+      role: user.role || "USER",
     });
+
     res.json({
       success: true,
       message: "Login successful",
-      user: result.user,
+      user,
       tokens,
     });
   } catch (error: any) {
+    if (error instanceof AuthError) {
+      return res.status(error.status).json({
+        success: false,
+        message: error.message,
+        code: error.code,
+      });
+    }
+
     console.error("Login error: ", error);
     return res.status(500).json({
       success: false,
       message: "Login failed",
       code: "LOGIN_ERROR",
-      error: {
-        message:
-          error.message?.split("\n").pop().trim() || error.message || error,
-      },
     });
   }
 };
 
 const register = async (req: Request, res: Response) => {
   try {
-    const result = await authService.register(req.body);
-    if (!result.user.id) {
-      return res.status(400).json({
-        success: false,
-        message: "Registration failed",
-        code: "REGISTRATION_FAILED",
-      });
-    }
+    const user = await authService.register(req.body);
     const tokens = generateTokens({
-      userId: result.user.id,
-      email: result.user.email,
-      role: result.user.role || "USER",
+      userId: user.id,
+      email: user.email,
+      role: user.role || "USER",
     });
-    res.json({
+
+    res.status(201).json({
       success: true,
       message: "Registration successful",
-      user: result.user,
+      user,
       tokens,
     });
   } catch (error: any) {
+    if (error instanceof AuthError) {
+      return res.status(error.status).json({
+        success: false,
+        message: error.message,
+        code: error.code,
+      });
+    }
+
     console.error("Registration error: ", error);
     return res.status(500).json({
       success: false,
       message: "Registration failed",
       code: "REGISTRATION_ERROR",
-      error: {
-        message:
-          error.message?.split("\n").pop().trim() || error.message || error,
-      },
     });
   }
 };
@@ -85,10 +81,6 @@ const logout = async (req: Request, res: Response) => {
       success: false,
       message: "Logout failed",
       code: "LOGOUT_ERROR",
-      error: {
-        message:
-          error.message?.split("\n").pop().trim() || error.message || error,
-      },
     });
   }
 };
