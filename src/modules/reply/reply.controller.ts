@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { replyService } from "./reply.service";
-import { envVars } from "../../config/env";
+import { uploadImageBuffer } from "../../lib/cloudinary";
 
 const getSingleValue = (
   value: string | string[] | undefined,
@@ -42,7 +42,7 @@ const createReply = async (req: Request, res: Response) => {
       uploadedFiles?.imageUrl?.[0] ||
       uploadedFiles?.file?.[0];
     const imageUrl = uploadedFile
-      ? `${envVars.API_URL}/uploads/posts/${uploadedFile.filename}`
+      ? (await uploadImageBuffer(uploadedFile.buffer, "posts")).secure_url
       : undefined;
 
     const result = await replyService.createReply({

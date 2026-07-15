@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { userService } from "./user.service";
-import { envVars } from "../../config/env";
+import { uploadImageBuffer } from "../../lib/cloudinary";
 
 const getMyProfile = async (req: Request, res: Response) => {
   try {
@@ -64,7 +64,7 @@ const updateMyProfile = async (req: Request, res: Response) => {
       req.body.removeProfileImage === "1";
 
     const profileImage = uploadedFile
-      ? `${envVars.API_URL}/uploads/profiles/${uploadedFile.filename}`
+      ? (await uploadImageBuffer(uploadedFile.buffer, "profiles")).secure_url
       : removeProfileImage
         ? null
         : undefined;

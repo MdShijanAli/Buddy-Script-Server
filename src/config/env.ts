@@ -12,6 +12,9 @@ interface EnvConfig {
   REFRESH_TOKEN_SECRET: string;
   ACCESS_TOKEN_EXPIRY: string;
   REFRESH_TOKEN_EXPIRY: string;
+  CLOUDINARY_CLOUD_NAME: string;
+  CLOUDINARY_API_KEY: string;
+  CLOUDINARY_API_SECRET: string;
 }
 
 const loadEnvVariables = (): EnvConfig => {
@@ -41,6 +44,10 @@ const loadEnvVariables = (): EnvConfig => {
     REFRESH_TOKEN_SECRET: process.env.REFRESH_TOKEN_SECRET || "",
     ACCESS_TOKEN_EXPIRY: process.env.ACCESS_TOKEN_EXPIRY || "6h",
     REFRESH_TOKEN_EXPIRY: process.env.REFRESH_TOKEN_EXPIRY || "7d",
+    CLOUDINARY_CLOUD_NAME: process.env.CLOUDINARY_CLOUD_NAME || "rn5bglqy",
+    CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY || "569637496195194",
+    CLOUDINARY_API_SECRET:
+      process.env.CLOUDINARY_API_SECRET || "1RIcX1sZSHsp4zYpjQutLSAtIgk",
   };
 };
 

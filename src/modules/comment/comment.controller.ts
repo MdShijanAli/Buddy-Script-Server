@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { commentService } from "./comment.service";
-import { envVars } from "../../config/env";
+import { uploadImageBuffer } from "../../lib/cloudinary";
 
 const createComment = async (req: Request, res: Response) => {
   try {
@@ -33,7 +33,7 @@ const createComment = async (req: Request, res: Response) => {
       uploadedFiles?.imageUrl?.[0] ||
       uploadedFiles?.file?.[0];
     const imageUrl = uploadedFile
-      ? `${envVars.API_URL}/uploads/posts/${uploadedFile.filename}`
+      ? (await uploadImageBuffer(uploadedFile.buffer, "posts")).secure_url
       : undefined;
 
     if (!req.body.content && !imageUrl) {
@@ -140,7 +140,7 @@ const updateComment = async (req: Request, res: Response) => {
       uploadedFiles?.imageUrl?.[0] ||
       uploadedFiles?.file?.[0];
     const imageUrl = uploadedFile
-      ? `${envVars.API_URL}/uploads/posts/${uploadedFile.filename}`
+      ? (await uploadImageBuffer(uploadedFile.buffer, "posts")).secure_url
       : undefined;
 
     if (!req.body.content && !imageUrl) {
